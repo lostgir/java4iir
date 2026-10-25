@@ -1,4 +1,4 @@
-package org.example;
+package ma.oncf_ops;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
