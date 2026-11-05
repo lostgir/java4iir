@@ -1,10 +1,10 @@
-package ma.oncf_ops.domain;
+package ma.dental_ops.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ma.oncf_ops.common.enums.StatutUtilisateur;
+import ma.dental_ops.common.enums.StatutUtilisateur;
 
 //Java Bean
 @Data

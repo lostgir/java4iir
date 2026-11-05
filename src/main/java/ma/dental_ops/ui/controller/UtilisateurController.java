@@ -1,9 +1,9 @@
-package ma.oncf_ops.ui.controller;
+package ma.dental_ops.ui.controller;
 
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import ma.oncf_ops.service.api.UtilisateurService;
+import ma.dental_ops.service.api.UtilisateurService;
 
 @Data
 @AllArgsConstructor

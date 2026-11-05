@@ -1,8 +1,8 @@
-package ma.oncf_ops;
+package ma.dental_ops;
 
-import ma.oncf_ops.repository.api.UtilisateurRepository;
-import ma.oncf_ops.repository.jdbcMySql.UtilisateurRepositoryImplt;
-import ma.oncf_ops.ui.controller.UtilisateurController;
+import ma.dental_ops.repository.api.UtilisateurRepository;
+import ma.dental_ops.repository.jdbcMySql.UtilisateurRepositoryImplt;
+import ma.dental_ops.ui.controller.UtilisateurController;
 
 /**
  * Hello world!

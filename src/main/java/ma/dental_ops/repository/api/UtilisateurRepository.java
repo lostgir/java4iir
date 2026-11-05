@@ -1,6 +1,6 @@
-package ma.oncf_ops.repository.api;
+package ma.dental_ops.repository.api;
 
-import ma.oncf_ops.domain.Utilisateur;
+import ma.dental_ops.domain.Utilisateur;
 
 import java.util.List;
 

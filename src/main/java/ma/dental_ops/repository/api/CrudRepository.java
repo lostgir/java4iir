@@ -1,4 +1,4 @@
-package ma.oncf_ops.repository.api;
+package ma.dental_ops.repository.api;
 
 public interface CrudRepository <T , ID> {
 
