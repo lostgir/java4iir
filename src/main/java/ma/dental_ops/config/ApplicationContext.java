@@ -1,4 +1,4 @@
-package ma.oncf_ops.config;
+package ma.dental_ops.config;
 
 public class ApplicationContext {
 

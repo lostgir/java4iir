@@ -11,6 +11,9 @@ public interface UtilisateurRepository extends CrudRepository<Utilisateur, Long>
     //Retourne l'utilisateur par son ID
     Utilisateur findUtilisateurById(Long idUtilisateur);
 
+    //Retourne l'utilisateur par son identifiant de connexion (authentification)
+    Utilisateur findByLogin(String login);
+
     //Enregistre un nouvel utilisateur dans la BD
     Utilisateur save(Utilisateur utilisateur);
 }
