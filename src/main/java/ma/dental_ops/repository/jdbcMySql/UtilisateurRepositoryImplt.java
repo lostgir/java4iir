@@ -16,15 +16,15 @@ import java.util.List;
 public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
     private static final String SELECT_COLUMNS =
-            "id_utilisateur, nom_utilisateur, prenom_utilisateur, statut_utilisateur";
+            "id_utilisateur, nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif";
 
     @Override
     public List<Utilisateur> findAllUtilisateurs() {
         String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur";
         List<Utilisateur> utilisateurs = new ArrayList<>();
 
-        Connection connection = DataSource.getInstance().getConnection();
-        try (Statement statement = connection.createStatement();
+        try (Connection connection = DataSource.getInstance().getConnection();
+             Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
 
             while (resultSet.next()) {
@@ -40,8 +40,8 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
     public Utilisateur findUtilisateurById(Long idUtilisateur) {
         String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE id_utilisateur = ?";
 
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, idUtilisateur);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -53,14 +53,34 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
     }
 
     @Override
-    public Utilisateur save(Utilisateur utilisateur) {
-        String sql = "INSERT INTO utilisateur (nom_utilisateur, prenom_utilisateur, statut_utilisateur) VALUES (?, ?, ?)";
+    public Utilisateur findByLogin(String login) {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE login = ?";
 
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, login);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapRow(resultSet) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recuperation de l'utilisateur par login", e);
+        }
+    }
+
+    @Override
+    public Utilisateur save(Utilisateur utilisateur) {
+        String sql = "INSERT INTO utilisateur (nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, utilisateur.getNomUtilisateur());
             statement.setString(2, utilisateur.getPrenomUtilisateur());
-            statement.setString(3, utilisateur.getStatutUtilisateur().name());
+            statement.setString(3, utilisateur.getLogin());
+            statement.setString(4, utilisateur.getMotDePasse());
+            statement.setString(5, utilisateur.getStatutUtilisateur().name());
+            statement.setBoolean(6, utilisateur.isActif());
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -79,7 +99,10 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                 .idUtilisateur(resultSet.getLong("id_utilisateur"))
                 .nomUtilisateur(resultSet.getString("nom_utilisateur"))
                 .prenomUtilisateur(resultSet.getString("prenom_utilisateur"))
+                .login(resultSet.getString("login"))
+                .motDePasse(resultSet.getString("mot_de_passe"))
                 .statutUtilisateur(StatutUtilisateur.valueOf(resultSet.getString("statut_utilisateur")))
+                .actif(resultSet.getBoolean("actif"))
                 .build();
     }
 }
