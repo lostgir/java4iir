@@ -224,12 +224,12 @@ L'équipe est composée de six membres.
 
 | Membre | Contributions |
 |---|---|
-| Membre 1 | À compléter |
-| Membre 2 | À compléter |
-| Membre 3 | À compléter |
-| Membre 4 | À compléter |
-| Membre 5 | À compléter |
-| Membre 6 | À compléter |
+| Hiba Bousseta | À compléter |
+| Hiba Rachki | À compléter |
+| Houda Rachki | À compléter |
+| Ihssan Hajari | À compléter |
+| Achraf Ouazzane | À compléter |
+| Taha chibane| À compléter |
 
 ### Conclusion du sprint
 
