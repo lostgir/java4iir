@@ -5,12 +5,16 @@ import ma.dental_ops.domain.Utilisateur;
 import java.util.List;
 
 public interface UtilisateurRepository extends CrudRepository<Utilisateur, Long> {
-    //Retourne tous les utilisateurs
+
+    // Retourner tous les utilisateurs
     List<Utilisateur> findAllUtilisateurs();
 
-    //Retourne l'utilisateur par son ID
+    // Retourner un utilisateur par son ID
     Utilisateur findUtilisateurById(Long idUtilisateur);
 
-    //Enregistre un nouvel utilisateur dans la BD
+    // Retrouver un utilisateur par son email
+    Utilisateur findByEmail(String email);
+
+    // Enregistrer un nouvel utilisateur
     Utilisateur save(Utilisateur utilisateur);
 }
