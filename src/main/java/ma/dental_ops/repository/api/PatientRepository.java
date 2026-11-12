@@ -1,6 +1,7 @@
 package ma.dental_ops.repository.api;
 
 import ma.dental_ops.domain.Patient;
+import ma.dental_ops.dto.PageResult;
 
 import java.sql.Connection;
 import java.util.List;
@@ -21,4 +22,7 @@ public interface PatientRepository {
 
     // US-03 : Rechercher un patient
     List<Patient> searchByNomOrTelephone(String searchTerm);
+
+    PageResult<Patient> searchPage(String searchTerm, int page, int pageSize);
+
 }

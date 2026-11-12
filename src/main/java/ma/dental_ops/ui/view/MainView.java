@@ -6,6 +6,12 @@ import ma.dental_ops.service.implementation.DashboardServiceImpl;
 import ma.dental_ops.service.implementation.UtilisateurServiceImpl;
 import ma.dental_ops.ui.controller.ChargeController;
 import ma.dental_ops.ui.controller.DashboardController;
+import ma.dental_ops.ui.controller.PatientController;
+import ma.dental_ops.repository.jdbcMySql.PatientRepositoryImpl;
+import ma.dental_ops.repository.jdbcMySql.DossierMedicalRepositoryImpl;
+import ma.dental_ops.repository.jdbcMySql.FileAttenteRepositoryImpl;
+import ma.dental_ops.service.implementation.PatientServiceImpl;
+import ma.dental_ops.service.implementation.FileAttenteServiceImpl;
 import ma.dental_ops.ui.controller.UtilisateurController;
 
 import javax.swing.*;
@@ -46,19 +52,28 @@ public class MainView extends JFrame {
         entete.add(titre);
         entete.add(sousTitre);
 
-        JPanel boutons = new JPanel(new GridLayout(utilisateurConnecte == null ? 2 : 3, 1, 15, 15));
+        JPanel boutons = new JPanel(new GridLayout(utilisateurConnecte == null ? 4 : 5, 1, 15, 15));
         boutons.setBackground(Color.WHITE);
 
         JButton btnDashboard = new JButton("Tableau de bord d'activité");
         JButton btnCharges = new JButton("Gestion des charges");
+        JButton btnFileAttente = new JButton("File d'attente du jour");
+        JButton btnPatients = new JButton("Rechercher des patients");
         JButton btnProfil = new JButton("Mon profil");
 
         styliserBouton(btnDashboard);
         styliserBouton(btnCharges);
+        styliserBouton(btnFileAttente);
+        styliserBouton(btnPatients);
         if (utilisateurConnecte != null) styliserBouton(btnProfil);
 
         btnDashboard.addActionListener(e -> ouvrirDashboard());
         btnCharges.addActionListener(e -> ouvrirCharges());
+        btnFileAttente.addActionListener(e -> new FileAttenteView(
+                new FileAttenteServiceImpl(new FileAttenteRepositoryImpl())).setVisible(true));
+        btnPatients.addActionListener(e -> new PatientListView(new PatientController(
+                new PatientServiceImpl(new PatientRepositoryImpl(), new DossierMedicalRepositoryImpl())))
+                .setVisible(true));
         if (utilisateurConnecte != null) {
             btnProfil.addActionListener(e -> new MonProfilView(this, utilisateurConnecte,
                     new UtilisateurController(new UtilisateurServiceImpl())).setVisible(true));
@@ -66,6 +81,8 @@ public class MainView extends JFrame {
 
         boutons.add(btnDashboard);
         boutons.add(btnCharges);
+        boutons.add(btnFileAttente);
+        boutons.add(btnPatients);
         if (utilisateurConnecte != null) boutons.add(btnProfil);
 
         principal.add(entete, BorderLayout.NORTH);

@@ -4,6 +4,7 @@ import ma.dental_ops.domain.DossierMedical;
 import ma.dental_ops.domain.Patient;
 import ma.dental_ops.dto.DossierMedecinDTO;
 import ma.dental_ops.dto.PatientSecretariatDTO;
+import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
 import ma.dental_ops.repository.api.PatientRepository;
 import ma.dental_ops.service.api.PatientService;
@@ -136,5 +137,18 @@ public class PatientServiceImpl implements PatientService {
                 .email(p.getEmail())
                 .archive(p.isArchive())
                 .build()).toList();
+    }
+
+    @Override
+    public PageResult<PatientSecretariatDTO> rechercherPatients(String terme, int page, int pageSize) {
+        if (page < 0 || pageSize < 1 || pageSize > 500) {
+            throw new IllegalArgumentException("Page must be >= 0 and page size between 1 and 500");
+        }
+        PageResult<Patient> result = patientRepository.searchPage(terme, page, pageSize);
+        List<PatientSecretariatDTO> items = result.items().stream().map(p -> PatientSecretariatDTO.builder()
+                .id(p.getId()).nom(p.getNom()).prenom(p.getPrenom())
+                .dateNaissance(p.getDateNaissance()).telephone(p.getTelephone())
+                .email(p.getEmail()).archive(p.isArchive()).build()).toList();
+        return new PageResult<>(items, result.page(), result.pageSize(), result.totalItems());
     }
 }
