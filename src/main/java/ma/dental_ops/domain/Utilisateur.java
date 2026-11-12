@@ -16,6 +16,9 @@ public class Utilisateur {
     private Long idUtilisateur;
     private String nomUtilisateur;
     private String prenomUtilisateur;
+    private String login;
+    private String motDePasse;
     private StatutUtilisateur statutUtilisateur;
+    private boolean actif;
 
 }
