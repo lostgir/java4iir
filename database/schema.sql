@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS utilisateur (
                                            nom_utilisateur VARCHAR(100) NOT NULL,
     prenom_utilisateur VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
+                                           telephone VARCHAR(20),
     mot_de_passe VARCHAR(255) NOT NULL,
     statut_utilisateur ENUM(
                                'ADMINISTRATEUR',
