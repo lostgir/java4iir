@@ -2,6 +2,7 @@ package ma.dental_ops.repository.jdbcMySql;
 
 import ma.dental_ops.config.DataSource;
 import ma.dental_ops.domain.Patient;
+import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.PatientRepository;
 
 import java.sql.*;
@@ -147,6 +148,53 @@ public class PatientRepositoryImpl implements PatientRepository {
         }
 
         return patients;
+    }
+
+    @Override
+    public PageResult<Patient> searchPage(String searchTerm, int page, int pageSize) {
+        if (page < 0 || pageSize < 1 || pageSize > 500) {
+            throw new IllegalArgumentException("Page must be >= 0 and page size between 1 and 500");
+        }
+        String term = searchTerm == null ? "" : searchTerm.trim();
+        String filter = """
+                WHERE (? = '' OR nom LIKE ? OR telephone LIKE ? OR EXISTS (
+                    SELECT 1 FROM dossier_medical d
+                    WHERE d.patient_id = patient.id_patient
+                      AND CAST(d.id_dossier AS CHAR) LIKE ?))
+                """;
+        String countSql = "SELECT COUNT(*) FROM patient" + filter;
+        String rowsSql = "SELECT * FROM patient" + filter
+                + " ORDER BY nom, prenom, id_patient LIMIT ? OFFSET ?";
+        long total;
+        List<Patient> patients = new ArrayList<>();
+        try (Connection connection = DataSource.getInstance().getConnection()) {
+            try (PreparedStatement count = connection.prepareStatement(countSql)) {
+                bindFilter(count, term);
+                try (ResultSet rs = count.executeQuery()) {
+                    rs.next();
+                    total = rs.getLong(1);
+                }
+            }
+            try (PreparedStatement rows = connection.prepareStatement(rowsSql)) {
+                bindFilter(rows, term);
+                rows.setInt(5, pageSize);
+                rows.setLong(6, (long) page * pageSize);
+                try (ResultSet rs = rows.executeQuery()) {
+                    while (rs.next()) patients.add(mapPatient(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche paginée des patients", e);
+        }
+        return new PageResult<>(patients, page, pageSize, total);
+    }
+
+    private void bindFilter(PreparedStatement statement, String term) throws SQLException {
+        String pattern = "%" + term + "%";
+        statement.setString(1, term);
+        statement.setString(2, pattern);
+        statement.setString(3, pattern);
+        statement.setString(4, pattern);
     }
 
     private Patient mapPatient(ResultSet rs) throws SQLException {

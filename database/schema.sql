@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS utilisateur (
                                            nom_utilisateur VARCHAR(100) NOT NULL,
     prenom_utilisateur VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
-                                           telephone VARCHAR(20),
+    telephone VARCHAR(20),
     mot_de_passe VARCHAR(255) NOT NULL,
     statut_utilisateur ENUM(
                                'ADMINISTRATEUR',
@@ -101,9 +101,13 @@ CREATE TABLE IF NOT EXISTS rendez_vous (
                                            'PLANIFIE',
                                            'CONFIRME',
                                            'ANNULE',
-                                           'TERMINE'
+                                           'TERMINE',
+                                           'ARRIVE',
+                                           'EN_COURS'
 ) NOT NULL DEFAULT 'PLANIFIE',
+    heure_arrivee TIMESTAMP NULL,
     INDEX idx_rdv_date (date_rendez_vous),
+    INDEX idx_rdv_file_attente (date_rendez_vous, statut, heure_arrivee, id_rendez_vous),
     CONSTRAINT fk_rdv_patient
     FOREIGN KEY (patient_id)
     REFERENCES patient(id_patient)

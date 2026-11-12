@@ -104,6 +104,11 @@ Le script crée les 20 tables et leurs contraintes :
 - Moteur InnoDB.
 - Encodage UTF-8 (`utf8mb4`).
 
+Pour une base existante, appliquer les migrations dans l'ordre :
+1. `database/migrations/V2__add_profile_telephone.sql` pour le profil ;
+2. `database/migrations/V3__file_attente.sql` pour la file d'attente.
+Sur une base vierge, `schema.sql` contient déjà ces champs et statuts ; ne pas appliquer ces migrations ensuite.
+
 ### 5.4 Insérer les données fictives
 
 Ouvrir le fichier :
