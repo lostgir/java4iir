@@ -1,16 +1,26 @@
 package ma.dental_ops.ui.view;
 
+import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.service.implementation.ChargeServiceImpl;
 import ma.dental_ops.service.implementation.DashboardServiceImpl;
+import ma.dental_ops.service.implementation.UtilisateurServiceImpl;
 import ma.dental_ops.ui.controller.ChargeController;
 import ma.dental_ops.ui.controller.DashboardController;
+import ma.dental_ops.ui.controller.UtilisateurController;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MainView extends JFrame {
 
+    private final Utilisateur utilisateurConnecte;
+
     public MainView() {
+        this(null);
+    }
+
+    public MainView(Utilisateur utilisateurConnecte) {
+        this.utilisateurConnecte = utilisateurConnecte;
         setTitle("DentalSoft - Menu principal");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -28,10 +38,7 @@ public class MainView extends JFrame {
         titre.setFont(new Font("Arial", Font.BOLD, 26));
         titre.setForeground(new Color(7, 23, 57));
 
-        JLabel sousTitre = new JLabel(
-                "Gestion du cabinet dentaire",
-                SwingConstants.CENTER
-        );
+        JLabel sousTitre = new JLabel("Gestion du cabinet dentaire", SwingConstants.CENTER);
         sousTitre.setFont(new Font("Arial", Font.PLAIN, 16));
 
         JPanel entete = new JPanel(new GridLayout(2, 1, 5, 5));
@@ -39,24 +46,30 @@ public class MainView extends JFrame {
         entete.add(titre);
         entete.add(sousTitre);
 
-        JPanel boutons = new JPanel(new GridLayout(2, 1, 15, 15));
+        JPanel boutons = new JPanel(new GridLayout(utilisateurConnecte == null ? 2 : 3, 1, 15, 15));
         boutons.setBackground(Color.WHITE);
 
         JButton btnDashboard = new JButton("Tableau de bord d'activité");
         JButton btnCharges = new JButton("Gestion des charges");
+        JButton btnProfil = new JButton("Mon profil");
 
         styliserBouton(btnDashboard);
         styliserBouton(btnCharges);
+        if (utilisateurConnecte != null) styliserBouton(btnProfil);
 
         btnDashboard.addActionListener(e -> ouvrirDashboard());
         btnCharges.addActionListener(e -> ouvrirCharges());
+        if (utilisateurConnecte != null) {
+            btnProfil.addActionListener(e -> new MonProfilView(this, utilisateurConnecte,
+                    new UtilisateurController(new UtilisateurServiceImpl())).setVisible(true));
+        }
 
         boutons.add(btnDashboard);
         boutons.add(btnCharges);
+        if (utilisateurConnecte != null) boutons.add(btnProfil);
 
         principal.add(entete, BorderLayout.NORTH);
         principal.add(boutons, BorderLayout.CENTER);
-
         add(principal);
     }
 
@@ -69,17 +82,13 @@ public class MainView extends JFrame {
     }
 
     private void ouvrirDashboard() {
-        DashboardController controller =
-                new DashboardController(new DashboardServiceImpl());
-
+        DashboardController controller = new DashboardController(new DashboardServiceImpl());
         DashboardView view = new DashboardView(controller);
         view.setVisible(true);
     }
 
     private void ouvrirCharges() {
-        ChargeController controller =
-                new ChargeController(new ChargeServiceImpl());
-
+        ChargeController controller = new ChargeController(new ChargeServiceImpl());
         ChargeView view = new ChargeView(controller);
         view.setVisible(true);
     }

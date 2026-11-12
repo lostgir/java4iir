@@ -13,7 +13,7 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
     private static final String SELECT_COLUMNS =
             "id_utilisateur, nom_utilisateur, prenom_utilisateur, " +
-                    "email, mot_de_passe, statut_utilisateur";
+                    "email, telephone, mot_de_passe, statut_utilisateur";
 
     // Récupérer tous les utilisateurs
     @Override
@@ -88,8 +88,8 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
         String sql = "INSERT INTO utilisateur " +
                 "(nom_utilisateur, prenom_utilisateur, email, " +
-                "mot_de_passe, statut_utilisateur) " +
-                "VALUES (?, ?, ?, ?, ?)";
+                "telephone, mot_de_passe, statut_utilisateur) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DataSource.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(
@@ -98,8 +98,9 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
             statement.setString(1, utilisateur.getNomUtilisateur());
             statement.setString(2, utilisateur.getPrenomUtilisateur());
             statement.setString(3, utilisateur.getEmail());
-            statement.setString(4, utilisateur.getMotDePasse());
-            statement.setString(5, utilisateur.getStatutUtilisateur().name());
+            statement.setString(4, utilisateur.getTelephone());
+            statement.setString(5, utilisateur.getMotDePasse());
+            statement.setString(6, utilisateur.getStatutUtilisateur().name());
 
             statement.executeUpdate();
 
@@ -117,6 +118,21 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
         }
     }
 
+    @Override
+    public void updateProfile(Long utilisateurId, String nom, String prenom, String telephone) {
+        String sql = "UPDATE utilisateur SET nom_utilisateur = ?, prenom_utilisateur = ?, telephone = ? WHERE id_utilisateur = ?";
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, nom);
+            statement.setString(2, prenom);
+            statement.setString(3, telephone);
+            statement.setLong(4, utilisateurId);
+            if (statement.executeUpdate() != 1) throw new IllegalArgumentException("Utilisateur introuvable");
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la mise à jour du profil", e);
+        }
+    }
+
     // Transformer une ligne SQL en objet Utilisateur
     private Utilisateur mapRow(ResultSet resultSet) throws SQLException {
 
@@ -125,6 +141,7 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                 .nomUtilisateur(resultSet.getString("nom_utilisateur"))
                 .prenomUtilisateur(resultSet.getString("prenom_utilisateur"))
                 .email(resultSet.getString("email"))
+                .telephone(resultSet.getString("telephone"))
                 .motDePasse(resultSet.getString("mot_de_passe"))
                 .statutUtilisateur(
                         StatutUtilisateur.valueOf(

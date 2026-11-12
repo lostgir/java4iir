@@ -7,4 +7,6 @@ import java.util.List;
 public interface UtilisateurService {
 
     List<Utilisateur> findAll();
+
+    Utilisateur updateProfile(Long utilisateurId, String nom, String prenom, String telephone);
 }

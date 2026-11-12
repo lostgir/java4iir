@@ -16,6 +16,7 @@ public class Utilisateur {
     private String nomUtilisateur;
     private String prenomUtilisateur;
     private String email;
+    private String telephone;
     private String motDePasse;
     private StatutUtilisateur statutUtilisateur;
 

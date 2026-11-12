@@ -17,4 +17,6 @@ public interface UtilisateurRepository extends CrudRepository<Utilisateur, Long>
 
     // Enregistrer un nouvel utilisateur
     Utilisateur save(Utilisateur utilisateur);
+
+    void updateProfile(Long utilisateurId, String nom, String prenom, String telephone);
 }
