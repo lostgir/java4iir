@@ -5,18 +5,19 @@ import ma.dental_ops.config.DataSource;
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.repository.api.UtilisateurRepository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
     private static final String SELECT_COLUMNS =
+ HibaRki
+            "id_utilisateur, nom_utilisateur, prenom_utilisateur, " +
+                    "email, mot_de_passe, statut_utilisateur";
+
             "id_utilisateur, nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif";
+     main
 
     @Override
     public List<Utilisateur> findAllUtilisateurs() {
@@ -38,7 +39,13 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
     @Override
     public Utilisateur findUtilisateurById(Long idUtilisateur) {
+ HibaRki
+
+        String sql = "SELECT " + SELECT_COLUMNS +
+                " FROM utilisateur WHERE id_utilisateur = ?";
+
         String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE id_utilisateur = ?";
+ main
 
         try (Connection connection = DataSource.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -64,23 +71,65 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                 return resultSet.next() ? mapRow(resultSet) : null;
             }
         } catch (SQLException e) {
+ HibaRki
+            throw new RuntimeException(
+                    "Erreur lors de la récupération de l'utilisateur", e);
+        }
+    }
+
+    // Récupérer un utilisateur par son email
+    @Override
+    public Utilisateur findByEmail(String email) {
+
+        String sql = "SELECT " + SELECT_COLUMNS +
+                " FROM utilisateur WHERE email = ?";
+
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, email);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapRow(resultSet) : null;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Erreur lors de la recherche par email", e);
+
             throw new RuntimeException("Erreur lors de la recuperation de l'utilisateur par login", e);
+ main
         }
     }
 
     @Override
     public Utilisateur save(Utilisateur utilisateur) {
+ HibaRki
+
+        String sql = "INSERT INTO utilisateur " +
+                "(nom_utilisateur, prenom_utilisateur, email, " +
+                "mot_de_passe, statut_utilisateur) " +
+                "VALUES (?, ?, ?, ?, ?)";
+
         String sql = "INSERT INTO utilisateur (nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif) "
                 + "VALUES (?, ?, ?, ?, ?, ?)";
+ main
 
         try (Connection connection = DataSource.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, utilisateur.getNomUtilisateur());
             statement.setString(2, utilisateur.getPrenomUtilisateur());
+ HibaRki
+            statement.setString(3, utilisateur.getEmail());
+            statement.setString(4, utilisateur.getMotDePasse());
+            statement.setString(5, utilisateur.getStatutUtilisateur().name());
+
+
             statement.setString(3, utilisateur.getLogin());
             statement.setString(4, utilisateur.getMotDePasse());
             statement.setString(5, utilisateur.getStatutUtilisateur().name());
             statement.setBoolean(6, utilisateur.isActif());
+ main
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -99,10 +148,18 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                 .idUtilisateur(resultSet.getLong("id_utilisateur"))
                 .nomUtilisateur(resultSet.getString("nom_utilisateur"))
                 .prenomUtilisateur(resultSet.getString("prenom_utilisateur"))
+ HibaRki
+                .email(resultSet.getString("email"))
+                .motDePasse(resultSet.getString("mot_de_passe"))
+                .statutUtilisateur(
+                        StatutUtilisateur.valueOf(
+                                resultSet.getString("statut_utilisateur")))
+
                 .login(resultSet.getString("login"))
                 .motDePasse(resultSet.getString("mot_de_passe"))
                 .statutUtilisateur(StatutUtilisateur.valueOf(resultSet.getString("statut_utilisateur")))
                 .actif(resultSet.getBoolean("actif"))
+ main
                 .build();
     }
 }

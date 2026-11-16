@@ -7,10 +7,75 @@ import ma.dental_ops.dto.PatientSecretariatDTO;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
 import ma.dental_ops.repository.api.PatientRepository;
 import ma.dental_ops.service.api.PatientService;
+ HibaRki
+import ma.dental_ops.config.DataSource;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+ main
 
 import java.util.List;
 
 public class PatientServiceImpl implements PatientService {
+ HibaRki
+
+    private final PatientRepository patientRepository;
+    private final DossierMedicalRepository dossierRepository;
+
+    public PatientServiceImpl(PatientRepository patientRepository, DossierMedicalRepository dossierRepository) {
+        this.patientRepository = patientRepository;
+        this.dossierRepository = dossierRepository;
+    }
+
+    @Override
+    public Patient creerPatientAvecDossier(Patient patient, Long medecinId) {
+
+        try (Connection connection =
+                     DataSource.getInstance().getConnection()) {
+
+            // Début de la transaction
+            connection.setAutoCommit(false);
+
+            try {
+                // 1. Création du patient
+                Patient patientSauve =
+                        patientRepository.save(patient, connection);
+
+                // 2. Création du dossier médical
+                DossierMedical dossier = DossierMedical.builder()
+                        .patientId(patientSauve.getId())
+                        .medecinId(medecinId)
+                        .build();
+
+                dossierRepository.save(dossier, connection);
+
+                // Les deux opérations ont réussi
+                connection.commit();
+
+                return patientSauve;
+
+            } catch (Exception e) {
+
+                // Annulation des deux opérations
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackException) {
+                    e.addSuppressed(rollbackException);
+                }
+
+                throw new RuntimeException(
+                        "Échec de la création du patient et de son dossier médical",
+                        e
+                );
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Erreur de connexion à la base de données", e
+            );
+        }
+
 
     private final PatientRepository patientRepository;
     private final DossierMedicalRepository dossierRepository;
@@ -33,6 +98,7 @@ public class PatientServiceImpl implements PatientService {
         dossierRepository.save(dossier);
 
         return patientSauve;
+ main
     }
 
     @Override
