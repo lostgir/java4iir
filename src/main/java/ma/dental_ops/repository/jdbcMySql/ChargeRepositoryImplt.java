@@ -2,6 +2,7 @@ package ma.dental_ops.repository.jdbcMySql;
 
 import ma.dental_ops.config.DataSource;
 import ma.dental_ops.domain.Charge;
+import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.ChargeRepository;
 
 import java.sql.*;
@@ -119,6 +120,41 @@ public class ChargeRepositoryImplt implements ChargeRepository {
     }
 
     @Override
+    public PageResult<Charge> findChargesParPeriode(
+            LocalDate dateDebut, LocalDate dateFin, int page, int pageSize) {
+        if (page < 0 || pageSize < 1 || pageSize > 500) {
+            throw new IllegalArgumentException("La page doit être positive et la taille comprise entre 1 et 500.");
+        }
+        String filter = " FROM charge WHERE date_charge BETWEEN ? AND ?";
+        long total;
+        List<Charge> charges = new ArrayList<>();
+        try (Connection connection = DataSource.getInstance().getConnection()) {
+            try (PreparedStatement count = connection.prepareStatement("SELECT COUNT(*)" + filter)) {
+                count.setDate(1, Date.valueOf(dateDebut));
+                count.setDate(2, Date.valueOf(dateFin));
+                try (ResultSet result = count.executeQuery()) {
+                    result.next();
+                    total = result.getLong(1);
+                }
+            }
+            String sql = "SELECT " + SELECT_COLUMNS + filter
+                    + " ORDER BY date_charge DESC, id_charge DESC LIMIT ? OFFSET ?";
+            try (PreparedStatement rows = connection.prepareStatement(sql)) {
+                rows.setDate(1, Date.valueOf(dateDebut));
+                rows.setDate(2, Date.valueOf(dateFin));
+                rows.setInt(3, pageSize);
+                rows.setLong(4, (long) page * pageSize);
+                try (ResultSet result = rows.executeQuery()) {
+                    while (result.next()) charges.add(mapRow(result));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche paginée des charges", e);
+        }
+        return new PageResult<>(charges, page, pageSize, total);
+    }
+
+    @Override
     public BigDecimal calculerTotalCharges(
             LocalDate dateDebut, LocalDate dateFin) {
 
@@ -142,6 +178,29 @@ public class ChargeRepositoryImplt implements ChargeRepository {
         }
 
         return BigDecimal.ZERO;
+    }
+
+    @Override
+    public BigDecimal calculerSolde(LocalDate debut, LocalDate fin) {
+        String sql = """
+                SELECT
+                    (SELECT COALESCE(SUM(montant), 0) FROM paiement
+                     WHERE statut = 'PAYE' AND date_paiement BETWEEN ? AND ?)
+                  - (SELECT COALESCE(SUM(montant), 0) FROM charge
+                     WHERE date_charge BETWEEN ? AND ?) AS solde
+                """;
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(debut));
+            statement.setDate(2, Date.valueOf(fin));
+            statement.setDate(3, Date.valueOf(debut));
+            statement.setDate(4, Date.valueOf(fin));
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() ? result.getBigDecimal("solde") : BigDecimal.ZERO;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul du solde", e);
+        }
     }
 
     private Charge mapRow(ResultSet resultSet) throws SQLException {

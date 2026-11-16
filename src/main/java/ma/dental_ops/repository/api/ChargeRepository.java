@@ -1,6 +1,7 @@
 package ma.dental_ops.repository.api;
 
 import ma.dental_ops.domain.Charge;
+import ma.dental_ops.dto.PageResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,6 +19,11 @@ public interface ChargeRepository {
             LocalDate dateDebut,
             LocalDate dateFin
     );
+
+    PageResult<Charge> findChargesParPeriode(
+            LocalDate dateDebut, LocalDate dateFin, int page, int pageSize);
+
+    BigDecimal calculerSolde(LocalDate dateDebut, LocalDate dateFin);
 
     BigDecimal calculerTotalCharges(
             LocalDate dateDebut,

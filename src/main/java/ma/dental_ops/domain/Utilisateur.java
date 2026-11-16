@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ma.dental_ops.common.enums.StatutUtilisateur;
 
-//Java Bean
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,8 +16,9 @@ public class Utilisateur {
     private String nomUtilisateur;
     private String prenomUtilisateur;
     private String login;
+    private String email;
+    private String telephone;
     private String motDePasse;
     private StatutUtilisateur statutUtilisateur;
     private boolean actif;
-
 }

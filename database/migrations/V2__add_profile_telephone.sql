@@ -1,0 +1,1 @@
+ALTER TABLE utilisateur ADD COLUMN telephone VARCHAR(20) NULL;

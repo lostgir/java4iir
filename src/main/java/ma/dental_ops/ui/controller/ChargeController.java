@@ -1,21 +1,26 @@
 package ma.dental_ops.ui.controller;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import ma.dental_ops.domain.Charge;
+import ma.dental_ops.domain.Utilisateur;
+import ma.dental_ops.common.enums.StatutUtilisateur;
+import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.service.api.ChargeService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-@Data
-@AllArgsConstructor
 public class ChargeController {
 
-    private ChargeService service;
+    private final ChargeService service;
+    private final Utilisateur utilisateurConnecte;
 
-    public ChargeController() {
+    public ChargeController(ChargeService service, Utilisateur utilisateurConnecte) {
+        this.service = java.util.Objects.requireNonNull(service);
+        this.utilisateurConnecte = utilisateurConnecte;
+        if (utilisateurConnecte == null || utilisateurConnecte.getStatutUtilisateur() != StatutUtilisateur.MEDECIN) {
+            throw new SecurityException("La gestion des charges est réservée au médecin.");
+        }
     }
 
     // Ajouter une charge
@@ -23,18 +28,16 @@ public class ChargeController {
             String titre,
             BigDecimal montant,
             LocalDate dateCharge,
-            String description,
-            Long auteurId) {
+            String description) {
 
         Charge charge = Charge.builder()
                 .titre(titre)
                 .montant(montant)
                 .dateCharge(dateCharge)
                 .description(description)
-                .auteurId(auteurId)
                 .build();
 
-        return service.ajouterCharge(charge);
+        return service.ajouterCharge(charge, utilisateurConnecte);
     }
 
     // Afficher toutes les charges
@@ -48,6 +51,15 @@ public class ChargeController {
             LocalDate dateFin) {
 
         return service.getChargesParPeriode(dateDebut, dateFin);
+    }
+
+    public PageResult<Charge> afficherChargesParPeriode(
+            LocalDate dateDebut, LocalDate dateFin, int page, int pageSize) {
+        return service.getChargesParPeriode(dateDebut, dateFin, page, pageSize);
+    }
+
+    public BigDecimal calculerSolde(LocalDate dateDebut, LocalDate dateFin) {
+        return service.calculerSolde(dateDebut, dateFin);
     }
 
     // Calculer le total des charges
