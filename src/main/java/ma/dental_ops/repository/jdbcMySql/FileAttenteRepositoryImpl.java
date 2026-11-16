@@ -20,6 +20,13 @@ public class FileAttenteRepositoryImpl implements FileAttenteRepository {
     }
 
     @Override
+    public void marquerAbsent(long rendezVousId, LocalDate jour) {
+        String sql = "UPDATE rendez_vous SET statut = 'ABSENT' "
+                + "WHERE id_rendez_vous = ? AND date_rendez_vous = ? AND statut IN ('PLANIFIE','CONFIRME')";
+        updateStatus(sql, rendezVousId, jour, "Seul un rendez-vous attendu aujourd'hui peut être marqué absent");
+    }
+
+    @Override
     public void passerEnCours(long rendezVousId, LocalDate jour) {
         String sql = "UPDATE rendez_vous SET statut = 'EN_COURS' "
                 + "WHERE id_rendez_vous = ? AND date_rendez_vous = ? AND statut = 'ARRIVE'";

@@ -14,7 +14,7 @@ public class MonProfilView extends JDialog {
     private final JTextField nom = new JTextField(22);
     private final JTextField prenom = new JTextField(22);
     private final JTextField telephone = new JTextField(22);
-    private final JTextField email = new JTextField(22);
+    private final JTextField login = new JTextField(22);
     private final JTextField role = new JTextField(22);
     private final JButton modifier = new JButton("Modifier");
     private final JButton enregistrer = new JButton("Enregistrer");
@@ -38,9 +38,9 @@ public class MonProfilView extends JDialog {
         form.add(new JLabel("Nom")); form.add(nom);
         form.add(new JLabel("Prénom")); form.add(prenom);
         form.add(new JLabel("Téléphone")); form.add(telephone);
-        form.add(new JLabel("Identifiant (email)")); form.add(email);
+        form.add(new JLabel("Identifiant")); form.add(login);
         form.add(new JLabel("Rôle")); form.add(role);
-        email.setEditable(false);
+        login.setEditable(false);
         role.setEditable(false);
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actions.add(modifier); actions.add(enregistrer); actions.add(annuler);
@@ -54,7 +54,7 @@ public class MonProfilView extends JDialog {
     private void afficher(Utilisateur u) {
         nom.setText(u.getNomUtilisateur()); prenom.setText(u.getPrenomUtilisateur());
         telephone.setText(u.getTelephone() == null ? "" : u.getTelephone());
-        email.setText(u.getEmail());
+        login.setText(u.getLogin());
         role.setText(u.getStatutUtilisateur() == null ? "" : u.getStatutUtilisateur().name());
     }
 

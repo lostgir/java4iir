@@ -9,23 +9,42 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiConsumer;
 
-/** Reception desk view for recording arrivals and managing today's queue. */
-public class FileAttenteView extends JFrame {
+public class FileAttenteView extends JPanel {
+    private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH:mm:ss");
+
     private final FileAttenteService service;
     private final DefaultTableModel rdvModel = model("ID RDV", "Patient", "Heure", "Statut");
-    private final DefaultTableModel queueModel = model("ID RDV", "Patient", "Heure d'arrivée");
+    private final DefaultTableModel queueModel = model("Position", "ID RDV", "Patient", "Heure d'arrivée");
     private final JTable rdvTable = new JTable(rdvModel);
     private final JTable queueTable = new JTable(queueModel);
+    private final JButton arrive = new JButton("Enregistrer l'arrivée");
+    private final JButton absent = new JButton("Absent");
+    private final JButton enCours = new JButton("Passer en cours");
+    private final JButton refresh = new JButton("Actualiser");
 
     public FileAttenteView(FileAttenteService service) {
+        super(new BorderLayout());
         this.service = service;
-        setTitle("DentalSoft - Arrivées et file d'attente");
-        setSize(800, 540);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        construire();
-        actualiser();
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        controls.add(arrive);
+        controls.add(absent);
+        controls.add(enCours);
+        controls.add(refresh);
+        arrive.addActionListener(e -> agir(rdvTable, 0, service::enregistrerArrivee));
+        absent.addActionListener(e -> agir(rdvTable, 0, service::marquerAbsent));
+        enCours.addActionListener(e -> agir(queueTable, 1, service::passerEnCours));
+        refresh.addActionListener(e -> actualiser(() -> {}));
+
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Rendez-vous du jour", new JScrollPane(rdvTable));
+        tabs.addTab("File d'attente", new JScrollPane(queueTable));
+        add(controls, BorderLayout.NORTH);
+        add(tabs, BorderLayout.CENTER);
+        actualiser(() -> {});
     }
 
     private static DefaultTableModel model(String... columns) {
@@ -34,63 +53,60 @@ public class FileAttenteView extends JFrame {
         };
     }
 
-    private void construire() {
-        JButton arrive = new JButton("Enregistrer l'arrivée du rendez-vous sélectionné");
-        JButton enCours = new JButton("Passer le patient sélectionné à En cours");
-        JButton refresh = new JButton("Actualiser");
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        controls.add(arrive); controls.add(enCours); controls.add(refresh);
-        arrive.addActionListener(e -> enregistrerArrivee());
-        enCours.addActionListener(e -> passerEnCours());
-        refresh.addActionListener(e -> actualiser());
-
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Rendez-vous du jour", new JScrollPane(rdvTable));
-        tabs.addTab("File d'attente", new JScrollPane(queueTable));
-        add(controls, BorderLayout.NORTH);
-        add(tabs, BorderLayout.CENTER);
+    private void agir(JTable table, int colonneId, BiConsumer<Long, LocalDate> operation) {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Sélectionnez un rendez-vous dans la liste correspondante.");
+            return;
+        }
+        long id = ((Number) table.getModel().getValueAt(table.convertRowIndexToModel(row), colonneId)).longValue();
+        LocalDate jour = LocalDate.now();
+        actualiser(() -> operation.accept(id, jour));
     }
 
-    private void enregistrerArrivee() {
-        int row = rdvTable.getSelectedRow();
-        if (row < 0) { info("Sélectionnez un rendez-vous du jour."); return; }
-        try {
-            long id = ((Number) rdvModel.getValueAt(rdvTable.convertRowIndexToModel(row), 0)).longValue();
-            service.enregistrerArrivee(id, LocalDate.now());
-            actualiser();
-        } catch (RuntimeException ex) { erreur(ex); }
-    }
-
-    private void passerEnCours() {
-        int row = queueTable.getSelectedRow();
-        if (row < 0) { info("Sélectionnez un patient dans la file d'attente."); return; }
-        try {
-            long id = ((Number) queueModel.getValueAt(queueTable.convertRowIndexToModel(row), 0)).longValue();
-            service.passerEnCours(id, LocalDate.now());
-            actualiser();
-        } catch (RuntimeException ex) { erreur(ex); }
-    }
-
-    private void actualiser() {
-        try {
-            rdvModel.setRowCount(0);
-            for (RendezVousDuJour r : service.getRendezVousDuJour(LocalDate.now())) {
-                rdvModel.addRow(new Object[]{r.rendezVousId(), r.prenom() + " " + r.nom(), r.heure(), r.statut()});
+    private void actualiser(Runnable action) {
+        LocalDate jour = LocalDate.now();
+        activerCommandes(false);
+        new SwingWorker<ListesDuJour, Void>() {
+            @Override protected ListesDuJour doInBackground() {
+                action.run();
+                return new ListesDuJour(service.getRendezVousDuJour(jour), service.getFileAttente(jour));
             }
-            queueModel.setRowCount(0);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            for (PatientEnAttente p : service.getFileAttente(LocalDate.now())) {
-                queueModel.addRow(new Object[]{p.rendezVousId(), p.prenom() + " " + p.nom(),
-                        p.heureArrivee() == null ? "—" : p.heureArrivee().format(formatter)});
+
+            @Override protected void done() {
+                try {
+                    afficher(get());
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                } catch (ExecutionException ex) {
+                    JOptionPane.showMessageDialog(FileAttenteView.this, ex.getCause().getMessage(),
+                            "Erreur", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    activerCommandes(true);
+                }
             }
-        } catch (RuntimeException ex) { erreur(ex); }
+        }.execute();
     }
 
-    private void info(String message) {
-        JOptionPane.showMessageDialog(this, message, "Information", JOptionPane.INFORMATION_MESSAGE);
+    private void afficher(ListesDuJour listes) {
+        rdvModel.setRowCount(0);
+        for (RendezVousDuJour rdv : listes.rendezVous()) {
+            rdvModel.addRow(new Object[]{rdv.rendezVousId(), rdv.prenom() + " " + rdv.nom(), rdv.heure(), rdv.statut()});
+        }
+        queueModel.setRowCount(0);
+        int position = 1;
+        for (PatientEnAttente patient : listes.file()) {
+            queueModel.addRow(new Object[]{position++, patient.rendezVousId(), patient.prenom() + " " + patient.nom(),
+                    patient.heureArrivee() == null ? "-" : patient.heureArrivee().format(HEURE)});
+        }
     }
 
-    private void erreur(RuntimeException ex) {
-        JOptionPane.showMessageDialog(this, ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+    private void activerCommandes(boolean active) {
+        arrive.setEnabled(active);
+        absent.setEnabled(active);
+        enCours.setEnabled(active);
+        refresh.setEnabled(active);
     }
+
+    private record ListesDuJour(List<RendezVousDuJour> rendezVous, List<PatientEnAttente> file) {}
 }

@@ -47,6 +47,10 @@ public class ChargeRepositoryPaginationIT extends TestCase {
         assertEquals(new BigDecimal("290.00"), repository.calculerSolde(date, date));
         repository.save(Charge.builder().titre("Charge test").montant(new BigDecimal("200.00"))
                 .dateCharge(date).auteurId(1L).build());
+        PageResult<Charge> updated = repository.findChargesParPeriode(date, date, 0, 20);
+        assertEquals(22L, updated.totalItems());
+        assertEquals("Charge test", updated.items().get(0).getTitre());
+        assertEquals(new BigDecimal("200.00"), updated.items().get(0).getMontant());
         assertEquals(new BigDecimal("90.00"), repository.calculerSolde(date, date));
     }
 }

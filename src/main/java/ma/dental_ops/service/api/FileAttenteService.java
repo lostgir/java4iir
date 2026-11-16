@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface FileAttenteService {
     void enregistrerArrivee(long rendezVousId, LocalDate jour);
+    void marquerAbsent(long rendezVousId, LocalDate jour);
     void passerEnCours(long rendezVousId, LocalDate jour);
     List<PatientEnAttente> getFileAttente(LocalDate jour);
     List<RendezVousDuJour> getRendezVousDuJour(LocalDate jour);

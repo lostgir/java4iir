@@ -73,8 +73,7 @@ public class MainView extends JFrame {
 
         btnDashboard.addActionListener(e -> ouvrirDashboard());
         if (medecin) btnCharges.addActionListener(e -> ouvrirCharges());
-        btnFileAttente.addActionListener(e -> new FileAttenteView(
-                new FileAttenteServiceImpl(new FileAttenteRepositoryImpl())).setVisible(true));
+        btnFileAttente.addActionListener(e -> ouvrirFileAttente());
         btnPatients.addActionListener(e -> new PatientListView(new PatientController(
                 new PatientServiceImpl(new PatientRepositoryImpl(), new DossierMedicalRepositoryImpl())))
                 .setVisible(true));
@@ -102,9 +101,22 @@ public class MainView extends JFrame {
         bouton.setPreferredSize(new Dimension(300, 60));
     }
 
+    private void ouvrirFileAttente() {
+        JFrame fenetre = new JFrame("DentalSoft - Arrivées et file d'attente");
+        fenetre.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        fenetre.setContentPane(creerFileAttente());
+        fenetre.setSize(800, 540);
+        fenetre.setLocationRelativeTo(this);
+        fenetre.setVisible(true);
+    }
+
+    private FileAttenteView creerFileAttente() {
+        return new FileAttenteView(new FileAttenteServiceImpl(new FileAttenteRepositoryImpl()));
+    }
+
     private void ouvrirDashboard() {
         DashboardController controller = new DashboardController(new DashboardServiceImpl());
-        DashboardView view = new DashboardView(controller);
+        DashboardView view = new DashboardView(controller, this::creerFileAttente);
         view.setVisible(true);
     }
 

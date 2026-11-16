@@ -105,7 +105,8 @@ CREATE TABLE IF NOT EXISTS rendez_vous (
                                            'ANNULE',
                                            'TERMINE',
                                            'ARRIVE',
-                                           'EN_COURS'
+                                           'EN_COURS',
+                                           'ABSENT'
 ) NOT NULL DEFAULT 'PLANIFIE',
     heure_arrivee TIMESTAMP NULL,
     INDEX idx_rdv_date (date_rendez_vous),

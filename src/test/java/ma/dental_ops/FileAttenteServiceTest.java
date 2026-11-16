@@ -18,8 +18,9 @@ public class FileAttenteServiceTest extends TestCase {
 
         service.enregistrerArrivee(7, date);
         service.passerEnCours(7, date);
+        service.marquerAbsent(8, date);
 
-        assertEquals(List.of("arrive:7:2026-11-12", "en-cours:7:2026-11-12"), repository.calls);
+        assertEquals(List.of("arrive:7:2026-11-12", "en-cours:7:2026-11-12", "absent:8:2026-11-12"), repository.calls);
     }
 
     public void testInvalidAppointmentIdIsRejectedBeforeRepositoryCall() {
@@ -37,6 +38,9 @@ public class FileAttenteServiceTest extends TestCase {
         private final List<String> calls = new ArrayList<>();
         @Override public void enregistrerArrivee(long id, LocalDate date) {
             calls.add("arrive:" + id + ":" + date);
+        }
+        @Override public void marquerAbsent(long id, LocalDate date) {
+            calls.add("absent:" + id + ":" + date);
         }
         @Override public void passerEnCours(long id, LocalDate date) {
             calls.add("en-cours:" + id + ":" + date);

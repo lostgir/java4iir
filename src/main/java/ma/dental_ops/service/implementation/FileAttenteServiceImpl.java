@@ -21,6 +21,11 @@ public class FileAttenteServiceImpl implements FileAttenteService {
         repository.enregistrerArrivee(rendezVousId, jour);
     }
 
+    @Override public void marquerAbsent(long rendezVousId, LocalDate jour) {
+        verifier(rendezVousId, jour);
+        repository.marquerAbsent(rendezVousId, jour);
+    }
+
     @Override public void passerEnCours(long rendezVousId, LocalDate jour) {
         verifier(rendezVousId, jour);
         repository.passerEnCours(rendezVousId, jour);
