@@ -37,4 +37,9 @@ public final class AppColors {
             Color.decode("#0B3C49");
 
     public static final Color WHITE = Color.WHITE;
+    // Alias pour compatibilité avec les composants existants
+    public static final Color DARK_BLUE = TEXT;
+    public static final Color SUCCESS = GREEN;
+    public static final Color WARNING = ORANGE;
+    public static final Color DANGER = RED;
 }

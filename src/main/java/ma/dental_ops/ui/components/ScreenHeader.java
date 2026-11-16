@@ -1,7 +1,7 @@
 
 package ma.dental_ops.ui.components;
 
-import ma.dental_ops.utils.AppColors;
+import ma.dental_ops.ui.styles.AppColors;
 
 import javax.swing.*;
 import java.awt.*;

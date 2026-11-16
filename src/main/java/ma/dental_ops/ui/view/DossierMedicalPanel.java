@@ -4,6 +4,7 @@ package ma.dental_ops.ui.view;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import ma.dental_ops.utils.TableStyle;
 
 public class DossierMedicalPanel extends JPanel {
 
@@ -38,6 +39,7 @@ public class DossierMedicalPanel extends JPanel {
         });
 
         table = new JTable(model);
+        TableStyle.appliquerStyle(table);
         table.setRowHeight(35);
 
         JScrollPane scrollPane = new JScrollPane(table);

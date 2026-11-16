@@ -4,6 +4,7 @@ package ma.dental_ops.ui.view;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import ma.dental_ops.utils.TableStyle;
 
 public class UtilisateurPanel extends JPanel {
 
@@ -43,12 +44,8 @@ public class UtilisateurPanel extends JPanel {
         };
 
         table = new JTable(model);
-        table.setRowHeight(40);
-        table.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        TableStyle.appliquerStyle(table);
 
-        table.getTableHeader().setFont(
-                new Font("SansSerif", Font.BOLD, 13)
-        );
 
         table.getTableHeader().setBackground(
                 new Color(224, 244, 245)
