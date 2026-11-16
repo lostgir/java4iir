@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: dental_ops_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: dental_ops_db
+    ports:
+      # Correspond a DataSource.url (127.0.0.1:3307) dans application.properties
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # schema.sql puis seed.sql sont executes automatiquement (ordre alphabetique)
+      - ./src/main/resources/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot1234"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dental_ops_build
+    working_dir: /app
+    volumes:
+      - .:/app
+      - maven_repo:/root/.m2
+    command: ["mvn", "-B", "clean", "package"]
+    profiles:
+      - build
+
+volumes:
+  mysql_data:
+  maven_repo:

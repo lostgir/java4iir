@@ -12,9 +12,16 @@ public interface UtilisateurRepository extends CrudRepository<Utilisateur, Long>
     // Retourner un utilisateur par son ID
     Utilisateur findUtilisateurById(Long idUtilisateur);
 
+ HibaRki
     // Retrouver un utilisateur par son email
     Utilisateur findByEmail(String email);
 
     // Enregistrer un nouvel utilisateur
+
+    //Retourne l'utilisateur par son identifiant de connexion (authentification)
+    Utilisateur findByLogin(String login);
+
+    //Enregistre un nouvel utilisateur dans la BD
+ main
     Utilisateur save(Utilisateur utilisateur);
 }

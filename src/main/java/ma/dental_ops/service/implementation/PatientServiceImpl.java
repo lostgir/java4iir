@@ -7,14 +7,18 @@ import ma.dental_ops.dto.PatientSecretariatDTO;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
 import ma.dental_ops.repository.api.PatientRepository;
 import ma.dental_ops.service.api.PatientService;
+ HibaRki
 import ma.dental_ops.config.DataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
+ main
+
 import java.util.List;
 
 public class PatientServiceImpl implements PatientService {
+ HibaRki
 
     private final PatientRepository patientRepository;
     private final DossierMedicalRepository dossierRepository;
@@ -71,6 +75,30 @@ public class PatientServiceImpl implements PatientService {
                     "Erreur de connexion à la base de données", e
             );
         }
+
+
+    private final PatientRepository patientRepository;
+    private final DossierMedicalRepository dossierRepository;
+
+    public PatientServiceImpl(PatientRepository patientRepository, DossierMedicalRepository dossierRepository) {
+        this.patientRepository = patientRepository;
+        this.dossierRepository = dossierRepository;
+    }
+
+    @Override
+    public Patient creerPatientAvecDossier(Patient patient, Long medecinId) {
+        // T05 : Création du patient
+        Patient patientSauve = patientRepository.save(patient);
+
+        // T05 : Création du dossier médical (RG-01)
+        DossierMedical dossier = DossierMedical.builder()
+                .patientId(patientSauve.getId())
+                .medecinId(medecinId)
+                .build();
+        dossierRepository.save(dossier);
+
+        return patientSauve;
+ main
     }
 
     @Override
