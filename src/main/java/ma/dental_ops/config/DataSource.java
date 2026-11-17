@@ -12,6 +12,22 @@ public class DataSource {
 
     private static DataSource instance;
 
+    private final String url;
+    private final String user;
+    private final String password;
+
+    private DataSource() {
+
+        Properties properties = new Properties();
+
+        try (InputStream input =
+                     getClass().getClassLoader()
+                             .getResourceAsStream("application.properties")) {
+
+            if (input == null) {
+                throw new RuntimeException(
+                        "Fichier application.properties introuvable"
+                );
     private String url;
     private String user;
     private String pass;
@@ -32,11 +48,26 @@ public class DataSource {
 
             url = properties.getProperty("DataSource.url");
             user = properties.getProperty("DataSource.user");
+ houda
+            password = properties.getProperty("DataSource.pass");
+
+            if (url == null || user == null || password == null) {
+                throw new RuntimeException(
+                        "Configuration MySQL incomplète"
+                );
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Erreur de lecture de la configuration MySQL", e
+            );
+
             pass = properties.getProperty("DataSource.pass");
 
         } catch (IOException e) {
             throw new RuntimeException(
                     "Erreur de lecture de la configuration", e);
+ main
         }
     }
 
@@ -49,10 +80,17 @@ public class DataSource {
 
     public Connection getConnection() {
         try {
-            return DriverManager.getConnection(url, user, pass);
+ houda
+            return DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Impossible de se connecter à MySQL", e
+            );
+    return DriverManager.getConnection(url, user, pass);
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Impossible de se connecter à MySQL", e);
+ main
         }
     }
 }
