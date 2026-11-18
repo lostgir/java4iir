@@ -43,11 +43,32 @@ public final class Session {
      * cette methode avant d'effectuer une operation protegee.
      */
     public void exiger(Droit droit) {
-        if (!estConnecte()) {
-            throw new AccesRefuseException("Vous devez etre connecte pour effectuer cette action.");
-        }
-        if (!RoleDroits.accorde(utilisateurConnecte.getStatutUtilisateur(), droit)) {
-            throw new AccesRefuseException("Votre role ne vous autorise pas a effectuer cette action.");
+        Utilisateur utilisateur = exigerConnexion();
+        if (!RoleDroits.accorde(utilisateur.getStatutUtilisateur(), droit)) {
+            throw new AccesRefuseException(MESSAGE_DROIT_REFUSE);
         }
     }
+
+    /**
+     * RG-03 : aucun service sans session ouverte. Renvoie l'utilisateur
+     * connecté, ou refuse l'accès si la session est fermée.
+     */
+    public Utilisateur exigerConnexion() {
+        Utilisateur utilisateur = utilisateurConnecte;
+        if (utilisateur == null) {
+            throw new AccesRefuseException(MESSAGE_NON_CONNECTE);
+        }
+        return utilisateur;
+    }
+
+    /** Vrai si l'utilisateur connecté dispose du droit (sert à masquer les menus). */
+    public boolean peut(Droit droit) {
+        Utilisateur utilisateur = utilisateurConnecte;
+        return utilisateur != null && RoleDroits.accorde(utilisateur.getStatutUtilisateur(), droit);
+    }
+
+    public static final String MESSAGE_NON_CONNECTE =
+            "Vous devez être connecté pour effectuer cette action.";
+    public static final String MESSAGE_DROIT_REFUSE =
+            "Votre rôle ne vous autorise pas à effectuer cette action.";
 }
