@@ -2,6 +2,7 @@ package ma.dental_ops;
 
 import junit.framework.TestCase;
 import ma.dental_ops.common.enums.StatutUtilisateur;
+import ma.dental_ops.common.security.AuthenticationException;
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.repository.api.UtilisateurRepository;
 import ma.dental_ops.service.implementation.AuthServiceImpl;
@@ -31,8 +32,7 @@ public class AuthServiceTest extends TestCase {
         AuthServiceImpl service =
                 new AuthServiceImpl(new FakeRepository(user));
 
-        Utilisateur resultat =
-                service.authentifier(" test ", "pass123".toCharArray());
+        Utilisateur resultat = service.login("test", "pass123");
 
         assertNotNull(resultat);
         assertEquals(Long.valueOf(5L), resultat.getIdUtilisateur());
@@ -48,21 +48,36 @@ public class AuthServiceTest extends TestCase {
         AuthServiceImpl service =
                 new AuthServiceImpl(new FakeRepository(creerUtilisateur(true)));
 
-        assertNull(service.authentifier("test", "incorrect".toCharArray()));
+        try {
+            service.login("test", "incorrect");
+            fail("une AuthenticationException etait attendue");
+        } catch (AuthenticationException expected) {
+            // CA-01 : message generique, ne revele pas quel champ est en cause.
+        }
     }
 
     public void testRefusLoginInconnu() {
         AuthServiceImpl service =
                 new AuthServiceImpl(new FakeRepository(creerUtilisateur(true)));
 
-        assertNull(service.authentifier("inconnu", "pass123".toCharArray()));
+        try {
+            service.login("inconnu", "pass123");
+            fail("une AuthenticationException etait attendue");
+        } catch (AuthenticationException expected) {
+            // attendu
+        }
     }
 
     public void testRefusCompteInactif() {
         AuthServiceImpl service =
                 new AuthServiceImpl(new FakeRepository(creerUtilisateur(false)));
 
-        assertNull(service.authentifier("test", "pass123".toCharArray()));
+        try {
+            service.login("test", "pass123");
+            fail("une AuthenticationException etait attendue");
+        } catch (AuthenticationException expected) {
+            // CA-01 : un compte inactif est refuse malgre un mot de passe correct.
+        }
     }
 
     private static final class FakeRepository

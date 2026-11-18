@@ -3,8 +3,8 @@ package ma.dental_ops.ui.controller;
 import ma.dental_ops.common.security.AuthenticationException;
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.service.api.AuthService;
-import ma.dental_ops.ui.view.AccueilView;
 import ma.dental_ops.ui.view.LoginView;
+import ma.dental_ops.ui.view.MainView;
 
 import javax.swing.JOptionPane;
 
@@ -33,7 +33,7 @@ public class LoginController {
             try {
                 Utilisateur utilisateur = authService.login(view.getEmail(), view.getPassword());
                 view.dispose();
-                showAccueilView(utilisateur);
+                showMainView(utilisateur);
             } catch (AuthenticationException ex) {
                 view.showError(ex.getMessage());
             }
@@ -47,13 +47,11 @@ public class LoginController {
         view.setVisible(true);
     }
 
-    private void showAccueilView(Utilisateur utilisateur) {
-        AccueilView accueil = new AccueilView(utilisateur);
-        accueil.getLogoutButton().addActionListener(e -> {
+    private void showMainView(Utilisateur utilisateur) {
+        MainView mainView = new MainView(utilisateur, () -> {
             authService.logout();
-            accueil.dispose();
             showLoginView();
         });
-        accueil.setVisible(true);
+        mainView.setVisible(true);
     }
 }
