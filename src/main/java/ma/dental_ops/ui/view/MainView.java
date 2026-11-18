@@ -1,7 +1,8 @@
 package ma.dental_ops.ui.view;
 
 import ma.dental_ops.domain.Utilisateur;
-import ma.dental_ops.common.enums.StatutUtilisateur;
+import ma.dental_ops.common.enums.Droit;
+import ma.dental_ops.common.security.Session;
 import ma.dental_ops.service.implementation.ChargeServiceImpl;
 import ma.dental_ops.service.implementation.DashboardServiceImpl;
 import ma.dental_ops.service.implementation.UtilisateurServiceImpl;
@@ -59,49 +60,61 @@ public class MainView extends JFrame {
         entete.add(titre);
         entete.add(sousTitre);
 
-        boolean medecin = utilisateurConnecte != null
-                && utilisateurConnecte.getStatutUtilisateur() == StatutUtilisateur.MEDECIN;
-        int nombreBoutons = 3 + (medecin ? 1 : 0) + (utilisateurConnecte != null ? 1 : 0) + (onLogout != null ? 1 : 0);
+        // Les menus suivent les droits du rôle connecté (§1.4). Masquer un
+        // menu ne suffit pas : chaque service vérifie aussi le droit (BNF-01).
+        Session session = Session.getInstance();
+        boolean dashboard = session.peut(Droit.CONSULTER_TABLEAU_BORD);
+        boolean charges = session.peut(Droit.GERER_CHARGES);
+        boolean fileAttente = session.peut(Droit.GERER_AGENDA);
+        boolean patients = session.peut(Droit.GERER_PATIENTS);
+        boolean profil = utilisateurConnecte != null && session.peut(Droit.GERER_PROFIL);
+        int nombreBoutons = Math.max(1, (dashboard ? 1 : 0) + (charges ? 1 : 0) + (fileAttente ? 1 : 0)
+                + (patients ? 1 : 0) + (profil ? 1 : 0) + (onLogout != null ? 1 : 0));
         JPanel boutons = new JPanel(new GridLayout(nombreBoutons, 1, 15, 15));
         boutons.setBackground(Color.WHITE);
 
-        JButton btnDashboard = new JButton("Tableau de bord d'activité");
-        JButton btnCharges = new JButton("Gestion des charges");
-        JButton btnFileAttente = new JButton("File d'attente du jour");
-        JButton btnPatients = new JButton("Rechercher des patients");
-        JButton btnProfil = new JButton("Mon profil");
-        JButton btnLogout = new JButton("Se déconnecter");
-
-        styliserBouton(btnDashboard);
-        if (medecin) styliserBouton(btnCharges);
-        styliserBouton(btnFileAttente);
-        styliserBouton(btnPatients);
-        if (utilisateurConnecte != null) styliserBouton(btnProfil);
-        if (onLogout != null) styliserBouton(btnLogout);
-
-        btnDashboard.addActionListener(e -> ouvrirDashboard());
-        if (medecin) btnCharges.addActionListener(e -> ouvrirCharges());
-        btnFileAttente.addActionListener(e -> ouvrirFileAttente());
-        btnPatients.addActionListener(e -> new PatientListView(new PatientController(
-                new PatientServiceImpl(new PatientRepositoryImpl(), new DossierMedicalRepositoryImpl())))
-                .setVisible(true));
-        if (utilisateurConnecte != null) {
+        if (dashboard) {
+            JButton btnDashboard = new JButton("Tableau de bord d'activité");
+            styliserBouton(btnDashboard);
+            btnDashboard.addActionListener(e -> ouvrirDashboard());
+            boutons.add(btnDashboard);
+        }
+        if (charges) {
+            JButton btnCharges = new JButton("Gestion des charges");
+            styliserBouton(btnCharges);
+            btnCharges.addActionListener(e -> ouvrirCharges());
+            boutons.add(btnCharges);
+        }
+        if (fileAttente) {
+            JButton btnFileAttente = new JButton("File d'attente du jour");
+            styliserBouton(btnFileAttente);
+            btnFileAttente.addActionListener(e -> ouvrirFileAttente());
+            boutons.add(btnFileAttente);
+        }
+        if (patients) {
+            JButton btnPatients = new JButton("Rechercher des patients");
+            styliserBouton(btnPatients);
+            btnPatients.addActionListener(e -> new PatientListView(new PatientController(
+                    new PatientServiceImpl(new PatientRepositoryImpl(), new DossierMedicalRepositoryImpl())))
+                    .setVisible(true));
+            boutons.add(btnPatients);
+        }
+        if (profil) {
+            JButton btnProfil = new JButton("Mon profil");
+            styliserBouton(btnProfil);
             btnProfil.addActionListener(e -> new MonProfilView(this, this.utilisateurConnecte,
-                    new UtilisateurController(new UtilisateurServiceImpl()), profil -> this.utilisateurConnecte = profil).setVisible(true));
+                    new UtilisateurController(new UtilisateurServiceImpl()), p -> this.utilisateurConnecte = p).setVisible(true));
+            boutons.add(btnProfil);
         }
         if (onLogout != null) {
+            JButton btnLogout = new JButton("Se déconnecter");
+            styliserBouton(btnLogout);
             btnLogout.addActionListener(e -> {
                 dispose();
                 onLogout.run();
             });
+            boutons.add(btnLogout);
         }
-
-        boutons.add(btnDashboard);
-        if (medecin) boutons.add(btnCharges);
-        boutons.add(btnFileAttente);
-        boutons.add(btnPatients);
-        if (utilisateurConnecte != null) boutons.add(btnProfil);
-        if (onLogout != null) boutons.add(btnLogout);
 
         principal.add(entete, BorderLayout.NORTH);
         principal.add(boutons, BorderLayout.CENTER);
