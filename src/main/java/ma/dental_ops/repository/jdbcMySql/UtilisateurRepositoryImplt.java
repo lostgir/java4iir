@@ -12,12 +12,8 @@ import java.util.List;
 public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
     private static final String SELECT_COLUMNS =
- HibaRki
             "id_utilisateur, nom_utilisateur, prenom_utilisateur, " +
-                    "email, mot_de_passe, statut_utilisateur";
-
-            "id_utilisateur, nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif";
-     main
+                    "login, email, telephone, mot_de_passe, statut_utilisateur, actif";
 
     @Override
     public List<Utilisateur> findAllUtilisateurs() {
@@ -25,69 +21,61 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
         List<Utilisateur> utilisateurs = new ArrayList<>();
 
         try (Connection connection = DataSource.getInstance().getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 utilisateurs.add(mapRow(resultSet));
             }
+            return utilisateurs;
+
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la recuperation des utilisateurs", e);
+            throw new RuntimeException(
+                    "Erreur lors de la récupération des utilisateurs", e);
         }
-        return utilisateurs;
     }
 
     @Override
     public Utilisateur findUtilisateurById(Long idUtilisateur) {
- HibaRki
-
-        String sql = "SELECT " + SELECT_COLUMNS +
-                " FROM utilisateur WHERE id_utilisateur = ?";
-
-        String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE id_utilisateur = ?";
- main
-
-        try (Connection connection = DataSource.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, idUtilisateur);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? mapRow(resultSet) : null;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la recuperation de l'utilisateur " + idUtilisateur, e);
+        if (idUtilisateur == null) {
+            return null;
         }
+        return rechercher(
+                "SELECT " + SELECT_COLUMNS +
+                        " FROM utilisateur WHERE id_utilisateur = ?",
+                idUtilisateur
+        );
     }
 
     @Override
     public Utilisateur findByLogin(String login) {
-        String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE login = ?";
-
-        try (Connection connection = DataSource.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, login);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? mapRow(resultSet) : null;
-            }
-        } catch (SQLException e) {
- HibaRki
-            throw new RuntimeException(
-                    "Erreur lors de la récupération de l'utilisateur", e);
+        if (login == null) {
+            return null;
         }
+        return rechercher(
+                "SELECT " + SELECT_COLUMNS +
+                        " FROM utilisateur WHERE login = ?",
+                login
+        );
     }
 
-    // Récupérer un utilisateur par son email
     @Override
     public Utilisateur findByEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+        return rechercher(
+                "SELECT " + SELECT_COLUMNS +
+                        " FROM utilisateur WHERE email = ?",
+                email
+        );
+    }
 
-        String sql = "SELECT " + SELECT_COLUMNS +
-                " FROM utilisateur WHERE email = ?";
-
+    private Utilisateur rechercher(String sql, Object valeur) {
         try (Connection connection = DataSource.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, email);
+            statement.setObject(1, valeur);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? mapRow(resultSet) : null;
@@ -95,41 +83,31 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Erreur lors de la recherche par email", e);
-
-            throw new RuntimeException("Erreur lors de la recuperation de l'utilisateur par login", e);
- main
+                    "Erreur lors de la recherche de l'utilisateur", e);
         }
     }
 
     @Override
     public Utilisateur save(Utilisateur utilisateur) {
- HibaRki
-
-        String sql = "INSERT INTO utilisateur " +
-                "(nom_utilisateur, prenom_utilisateur, email, " +
-                "mot_de_passe, statut_utilisateur) " +
-                "VALUES (?, ?, ?, ?, ?)";
-
-        String sql = "INSERT INTO utilisateur (nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
- main
+        String sql =
+                "INSERT INTO utilisateur " +
+                        "(nom_utilisateur, prenom_utilisateur, login, email, " +
+                        "telephone, mot_de_passe, statut_utilisateur, actif) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DataSource.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = connection.prepareStatement(
+                     sql, Statement.RETURN_GENERATED_KEYS)) {
+
             statement.setString(1, utilisateur.getNomUtilisateur());
             statement.setString(2, utilisateur.getPrenomUtilisateur());
- HibaRki
-            statement.setString(3, utilisateur.getEmail());
-            statement.setString(4, utilisateur.getMotDePasse());
-            statement.setString(5, utilisateur.getStatutUtilisateur().name());
-
-
             statement.setString(3, utilisateur.getLogin());
-            statement.setString(4, utilisateur.getMotDePasse());
-            statement.setString(5, utilisateur.getStatutUtilisateur().name());
-            statement.setBoolean(6, utilisateur.isActif());
- main
+            statement.setString(4, utilisateur.getEmail());
+            statement.setString(5, utilisateur.getTelephone());
+            statement.setString(6, utilisateur.getMotDePasse());
+            statement.setString(7, utilisateur.getStatutUtilisateur().name());
+            statement.setBoolean(8, utilisateur.isActif());
+
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -138,8 +116,40 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                 }
             }
             return utilisateur;
+
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de l'enregistrement de l'utilisateur", e);
+            throw new RuntimeException(
+                    "Erreur lors de l'enregistrement de l'utilisateur", e);
+        }
+    }
+
+    @Override
+    public void updateProfile(
+            Long utilisateurId,
+            String nom,
+            String prenom,
+            String telephone) {
+
+        String sql =
+                "UPDATE utilisateur " +
+                        "SET nom_utilisateur = ?, prenom_utilisateur = ?, telephone = ? " +
+                        "WHERE id_utilisateur = ?";
+
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, nom);
+            statement.setString(2, prenom);
+            statement.setString(3, telephone);
+            statement.setObject(4, utilisateurId);
+
+            if (statement.executeUpdate() != 1) {
+                throw new IllegalArgumentException("Utilisateur introuvable");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Erreur lors de la mise à jour du profil", e);
         }
     }
 
@@ -148,18 +158,13 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                 .idUtilisateur(resultSet.getLong("id_utilisateur"))
                 .nomUtilisateur(resultSet.getString("nom_utilisateur"))
                 .prenomUtilisateur(resultSet.getString("prenom_utilisateur"))
- HibaRki
-                .email(resultSet.getString("email"))
-                .motDePasse(resultSet.getString("mot_de_passe"))
-                .statutUtilisateur(
-                        StatutUtilisateur.valueOf(
-                                resultSet.getString("statut_utilisateur")))
-
                 .login(resultSet.getString("login"))
+                .email(resultSet.getString("email"))
+                .telephone(resultSet.getString("telephone"))
                 .motDePasse(resultSet.getString("mot_de_passe"))
-                .statutUtilisateur(StatutUtilisateur.valueOf(resultSet.getString("statut_utilisateur")))
+                .statutUtilisateur(StatutUtilisateur.valueOf(
+                        resultSet.getString("statut_utilisateur")))
                 .actif(resultSet.getBoolean("actif"))
- main
                 .build();
     }
 }

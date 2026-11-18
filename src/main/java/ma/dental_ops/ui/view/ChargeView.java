@@ -1,331 +1,172 @@
 package ma.dental_ops.ui.view;
 
 import ma.dental_ops.domain.Charge;
+import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.ui.controller.ChargeController;
 
-import javax.swing.table.DefaultTableModel;
-import java.util.Vector;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.util.List;
+import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 public class ChargeView extends JFrame {
-
+    private static final int PAGE_SIZE = 20;
     private final ChargeController controller;
-    private JTextField txtDateDebut;
-    private JTextField txtDateFin;
-    private JButton btnFiltrer;
-    private JTextField txtTitre;
-    private JTextField txtMontant;
-    private JTextField txtDate;
-    private JTextField txtAuteurId;
-    private JTextArea txtDescription;
-    private JTable tableCharges;
-    private DefaultTableModel tableModel;
-    private JLabel lblTotal;
-    private JButton btnAfficherTout;
+    private final JTextField titre = new JTextField(22);
+    private final JTextField montant = new JTextField(12);
+    private final JTextField dateCharge = new JTextField(LocalDate.now().toString(), 12);
+    private final JTextArea description = new JTextArea(3, 22);
+    private final JTextField dateDebut = new JTextField(LocalDate.now().withDayOfMonth(1).toString(), 10);
+    private final JTextField dateFin = new JTextField(LocalDate.now().toString(), 10);
+    private final DefaultTableModel model = new DefaultTableModel(
+            new Object[]{"Date", "Titre", "Description", "Montant (MAD)"}, 0) {
+        @Override public boolean isCellEditable(int row, int column) { return false; }
+    };
+    private final JTable table = new JTable(model);
+    private final JLabel total = new JLabel("Total de la période : 0,00 MAD");
+    private final JLabel pageInfo = new JLabel("Page 0 / 0");
+    private final JButton precedent = new JButton("Précédent");
+    private final JButton suivant = new JButton("Suivant");
+    private int page;
+
     public ChargeView(ChargeController controller) {
-
-        this.controller = controller;
-
-        setTitle("DentalSoft - Gestion des charges");
-        setSize(550, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.controller = java.util.Objects.requireNonNull(controller);
+        setTitle("DentalSoft - Charges du cabinet");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setMinimumSize(new Dimension(820, 580));
+        setSize(980, 680);
         setLocationRelativeTo(null);
-
-        initComponents();
+        construireInterface();
+        actualiser();
     }
 
-    private void initComponents() {
+    private void construireInterface() {
+        JPanel root = new JPanel(new BorderLayout(14, 14));
+        root.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
+        root.setBackground(new Color(245, 248, 250));
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(245, 248, 250));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        JLabel titrePage = new JLabel("Charges du cabinet");
+        titrePage.setFont(new Font("Arial", Font.BOLD, 24));
+        titrePage.setForeground(new Color(20, 60, 90));
+        root.add(titrePage, BorderLayout.NORTH);
 
+        JPanel centre = new JPanel(new BorderLayout(12, 12));
+        centre.setOpaque(false);
+        centre.add(creerFormulaire(), BorderLayout.NORTH);
 
+        table.setRowHeight(28);
+        table.setFillsViewportHeight(true);
+        centre.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel titre = new JLabel("Saisie des charges du cabinet");
-        titre.setForeground(new Color(20, 60, 90));
-        titre.setFont(new Font("Arial", Font.BOLD, 20));
-
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        panel.add(titre, gbc);
-
-        gbc.gridwidth = 1;
-
-        txtTitre = new JTextField(20);
-        txtMontant = new JTextField(20);
-        txtDate = new JTextField(LocalDate.now().toString(), 20);
-        txtAuteurId = new JTextField("1", 20);
-        txtDescription = new JTextArea(4, 20);
-        txtDescription.setLineWrap(true);
-
-        ajouterChamp(panel, gbc, "Titre :", txtTitre, 1);
-        ajouterChamp(panel, gbc, "Montant (MAD) :", txtMontant, 2);
-        ajouterChamp(panel, gbc, "Date (AAAA-MM-JJ) :", txtDate, 3);
-        ajouterChamp(panel, gbc, "ID de l'auteur :", txtAuteurId, 4);
-
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        panel.add(new JLabel("Description :"), gbc);
-
-        gbc.gridx = 1;
-        panel.add(new JScrollPane(txtDescription), gbc);
-
-        JButton btnEnregistrer = new JButton("Enregistrer la charge");
-        btnEnregistrer.setBackground(new Color(25, 135, 84));
-        btnEnregistrer.setForeground(Color.WHITE);
-        btnEnregistrer.setFont(new Font("Arial", Font.BOLD, 14));
-        btnEnregistrer.setFocusPainted(false);
-
-        btnEnregistrer.addActionListener(e -> enregistrerCharge());
-
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        gbc.gridwidth = 2;
-        panel.add(btnEnregistrer, gbc);
-
-// Tableau des charges
-        String[] colonnes = {
-                "ID", "Titre", "Montant (MAD)", "Date", "Description"
-        };
-
-        tableModel = new DefaultTableModel(colonnes, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        tableCharges = new JTable(tableModel);
-        tableCharges.setRowHeight(25);
-
-        JScrollPane scrollPane = new JScrollPane(tableCharges);
-
-        gbc.gridx = 0;
-        gbc.gridy = 7;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-
-        panel.add(scrollPane, gbc);
-        // Affichage du total des charges
-        lblTotal = new JLabel("Total des charges : 0.00 MAD");
-        lblTotal.setFont(new Font("Arial", Font.BOLD, 16));
-
-        // Filtre par période
-        JPanel panelFiltre = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-        txtDateDebut = new JTextField(10);
-        txtDateFin = new JTextField(10);
-
-        txtDateDebut.setText(LocalDate.now().withDayOfMonth(1).toString());
-        txtDateFin.setText(LocalDate.now().toString());
-
-        btnFiltrer = new JButton("Filtrer");
-        btnFiltrer = new JButton("Filtrer");
-        btnFiltrer.setBackground(new Color(13, 110, 253));
-        btnFiltrer.setForeground(Color.WHITE);
-        btnFiltrer.setFont(new Font("Arial", Font.BOLD, 13));
-        btnFiltrer.setFocusPainted(false);
-        btnAfficherTout = new JButton("Afficher toutes les charges");
-        btnAfficherTout.setBackground(new Color(20, 60, 90));
-        btnAfficherTout.setForeground(Color.WHITE);
-        btnAfficherTout.setFont(new Font("Arial", Font.BOLD, 13));
-        btnAfficherTout.setFocusPainted(false);
-        btnFiltrer.addActionListener(e -> filtrerCharges());
-        btnAfficherTout.addActionListener(e -> {
-            chargerCharges();
-
-            lblTotal.setText("Total des charges : "
-                    + controller.calculerTotalCharges(
-                    LocalDate.of(2000, 1, 1),
-                    LocalDate.now()
-            )
-                    + " MAD");
-        });
-        panelFiltre.add(btnAfficherTout);
-        panelFiltre.add(new JLabel("Date début :"));
-        panelFiltre.add(txtDateDebut);
-        panelFiltre.add(new JLabel("Date fin :"));
-        panelFiltre.add(txtDateFin);
-        panelFiltre.add(btnFiltrer);
-
-        gbc.gridx = 0;
-        gbc.gridy = 9;
-        gbc.gridwidth = 2;
-        gbc.weighty = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        panel.add(panelFiltre, gbc);
-        btnFiltrer.addActionListener(e -> filtrerCharges());
-
-        gbc.gridx = 0;
-        gbc.gridy = 8;
-        gbc.gridwidth = 2;
-        gbc.weighty = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        panel.add(lblTotal, gbc);
-
-// Agrandir la fenêtre
-        setSize(750, 650);
-
-        add(panel);
-
-// Charger les charges depuis MySQL
-        chargerCharges();
+        JPanel bas = new JPanel(new BorderLayout(8, 8));
+        bas.setOpaque(false);
+        JPanel filtre = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        filtre.setOpaque(false);
+        filtre.add(new JLabel("Période du")); filtre.add(dateDebut);
+        filtre.add(new JLabel("au")); filtre.add(dateFin);
+        JButton filtrer = new JButton("Appliquer");
+        filtrer.addActionListener(e -> { page = 0; actualiser(); });
+        filtre.add(filtrer);
+        total.setFont(new Font("Arial", Font.BOLD, 15));
+        bas.add(filtre, BorderLayout.NORTH);
+        bas.add(total, BorderLayout.CENTER);
+        JPanel pagination = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pagination.setOpaque(false);
+        precedent.addActionListener(e -> { if (page > 0) { page--; actualiser(); } });
+        suivant.addActionListener(e -> { page++; actualiser(); });
+        pagination.add(precedent); pagination.add(pageInfo); pagination.add(suivant);
+        bas.add(pagination, BorderLayout.SOUTH);
+        centre.add(bas, BorderLayout.SOUTH);
+        root.add(centre, BorderLayout.CENTER);
+        add(root);
     }
 
-    private void filtrerCharges() {
+    private JPanel creerFormulaire() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(Color.WHITE);
+        form.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Enregistrer une charge"),
+                BorderFactory.createEmptyBorder(8, 10, 10, 10)));
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(5, 6, 5, 6);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.weightx = 0;
+        champ(form, c, "Titre", titre, 0, 0);
+        champ(form, c, "Montant (MAD)", montant, 2, 0);
+        champ(form, c, "Date (AAAA-MM-JJ)", dateCharge, 0, 1);
+        c.gridx = 2; c.gridy = 1; form.add(new JLabel("Description"), c);
+        c.gridx = 3; c.weightx = 1; c.weighty = 1; c.fill = GridBagConstraints.BOTH;
+        description.setLineWrap(true); description.setWrapStyleWord(true);
+        form.add(new JScrollPane(description), c);
+        JButton enregistrer = new JButton("Enregistrer");
+        enregistrer.setBackground(new Color(25, 135, 84));
+        enregistrer.setForeground(Color.WHITE);
+        enregistrer.addActionListener(e -> enregistrer());
+        c.gridx = 4; c.gridy = 0; c.gridheight = 2; c.weightx = 0; c.weighty = 0;
+        c.fill = GridBagConstraints.NONE; c.anchor = GridBagConstraints.CENTER;
+        form.add(enregistrer, c);
+        return form;
+    }
+
+    private void champ(JPanel panel, GridBagConstraints c, String label, JComponent input, int x, int y) {
+        c.gridx = x; c.gridy = y; c.weightx = 0; c.weighty = 0; c.gridheight = 1;
+        c.fill = GridBagConstraints.HORIZONTAL; panel.add(new JLabel(label), c);
+        c.gridx = x + 1; c.weightx = 1; panel.add(input, c);
+    }
+
+    private void enregistrer() {
         try {
-            LocalDate dateDebut = LocalDate.parse(txtDateDebut.getText().trim());
-            LocalDate dateFin = LocalDate.parse(txtDateFin.getText().trim());
-
-            if (dateDebut.isAfter(dateFin)) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "La date de début doit être antérieure à la date de fin.",
-                        "Erreur",
-                        JOptionPane.ERROR_MESSAGE
-                );
-                return;
-            }
-
-            // Vider le tableau
-            tableModel.setRowCount(0);
-
-            // Récupérer les charges de la période
-            List<Charge> charges = controller.afficherChargesParPeriode(
-                    dateDebut, dateFin
-            );
-
-            for (Charge charge : charges) {
-                Object[] ligne = {
-                        charge.getIdCharge(),
-                        charge.getTitre(),
-                        charge.getMontant(),
-                        charge.getDateCharge(),
-                        charge.getDescription()
-                };
-
-                tableModel.addRow(ligne);
-            }
-
-            // Calculer le total de la période
-            java.math.BigDecimal total = controller.calculerTotalCharges(
-                    dateDebut, dateFin
-            );
-
-            lblTotal.setText("Total des charges de la période : " + total + " MAD");
-
-        } catch (java.time.format.DateTimeParseException e) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Format de date invalide. Utilisez AAAA-MM-JJ.",
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Erreur lors du filtrage : " + e.getMessage(),
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        }
-    }
-
-    private void chargerCharges() {
-
-        tableModel.setRowCount(0);
-
-        List<Charge> charges = controller.afficherToutesLesCharges();
-
-        for (Charge charge : charges) {
-            Object[] ligne = {
-                    charge.getIdCharge(),
-                    charge.getTitre(),
-                    charge.getMontant(),
-                    charge.getDateCharge(),
-                    charge.getDescription()
-            };
-
-            tableModel.addRow(ligne);
-        }
-        java.math.BigDecimal total = controller.calculerTotalCharges(
-                LocalDate.of(2000, 1, 1),
-                LocalDate.now()
-        );
-
-        lblTotal.setText("Total des charges : " + total + " MAD");
-    }
-
-    private void ajouterChamp(
-            JPanel panel,
-            GridBagConstraints gbc,
-            String label,
-            JTextField champ,
-            int ligne) {
-
-        gbc.gridx = 0;
-        gbc.gridy = ligne;
-        panel.add(new JLabel(label), gbc);
-
-        gbc.gridx = 1;
-        panel.add(champ, gbc);
-    }
-
-    private void enregistrerCharge() {
-
-        try {
-            Charge charge = Charge.builder()
-                    .titre(txtTitre.getText().trim())
-                    .montant(new BigDecimal(txtMontant.getText().trim()))
-                    .dateCharge(LocalDate.parse(txtDate.getText().trim()))
-                    .description(txtDescription.getText().trim())
-                    .auteurId(Long.parseLong(txtAuteurId.getText().trim()))
-                    .build();
-
-            controller.ajouterCharge(
-                    charge.getTitre(),
-                    charge.getMontant(),
-                    charge.getDateCharge(),
-                    charge.getDescription(),
-                    charge.getAuteurId()
-            );
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Charge enregistrée avec succès !",
-                    "Succès",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-            chargerCharges();
-
-            txtTitre.setText("");
-            txtMontant.setText("");
-            txtDate.setText(LocalDate.now().toString());
-            txtDescription.setText("");
-
+            BigDecimal valeur = new BigDecimal(montant.getText().trim().replace(',', '.'));
+            LocalDate date = LocalDate.parse(dateCharge.getText().trim());
+            controller.ajouterCharge(titre.getText(), valeur, date, description.getText());
+            JOptionPane.showMessageDialog(this, "La charge a été enregistrée.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            titre.setText(""); montant.setText(""); description.setText("");
+            dateCharge.setText(LocalDate.now().toString());
+            page = 0;
+            actualiser();
+        } catch (DateTimeParseException ex) {
+            erreur("Date invalide. Utilise le format AAAA-MM-JJ.");
+        } catch (NumberFormatException ex) {
+            erreur("Montant invalide. Exemple : 200,00");
         } catch (Exception ex) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Erreur : " + ex.getMessage(),
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            erreur(ex.getMessage() == null ? "Impossible d'enregistrer la charge." : ex.getMessage());
         }
+    }
+
+    private void actualiser() {
+        try {
+            LocalDate debut = LocalDate.parse(dateDebut.getText().trim());
+            LocalDate fin = LocalDate.parse(dateFin.getText().trim());
+            PageResult<Charge> resultat = controller.afficherChargesParPeriode(debut, fin, page, PAGE_SIZE);
+            model.setRowCount(0);
+            NumberFormat format = NumberFormat.getNumberInstance(Locale.FRANCE);
+            format.setMinimumFractionDigits(2); format.setMaximumFractionDigits(2);
+            for (Charge charge : resultat.items()) {
+                model.addRow(new Object[]{charge.getDateCharge(), charge.getTitre(),
+                        charge.getDescription() == null ? "" : charge.getDescription(),
+                        format.format(charge.getMontant())});
+            }
+            total.setText("Total des charges de la période : " + format.format(
+                    controller.calculerTotalCharges(debut, fin)) + " MAD — Solde : "
+                    + format.format(controller.calculerSolde(debut, fin)) + " MAD");
+            int pages = resultat.totalPages();
+            pageInfo.setText("Page " + (pages == 0 ? 0 : page + 1) + " / " + pages
+                    + " — " + resultat.totalItems() + " charge(s)");
+            precedent.setEnabled(page > 0);
+            suivant.setEnabled(page + 1 < pages);
+        } catch (DateTimeParseException ex) {
+            erreur("Période invalide. Utilise le format AAAA-MM-JJ.");
+        } catch (Exception ex) {
+            erreur(ex.getMessage() == null ? "Impossible de charger les charges." : ex.getMessage());
+        }
+    }
+
+    private void erreur(String message) {
+        JOptionPane.showMessageDialog(this, message, "Erreur", JOptionPane.ERROR_MESSAGE);
     }
 }

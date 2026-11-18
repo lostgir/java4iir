@@ -1,0 +1,5 @@
+USE dental_ops_db;
+
+ALTER TABLE rendez_vous
+    MODIFY statut ENUM('PLANIFIE','CONFIRME','ANNULE','TERMINE','ARRIVE','EN_COURS','ABSENT')
+        NOT NULL DEFAULT 'PLANIFIE';

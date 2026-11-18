@@ -12,9 +12,9 @@ public class DataSource {
 
     private static DataSource instance;
 
-    private String url;
-    private String user;
-    private String pass;
+    private final String url;
+    private final String user;
+    private final String pass;
 
     private DataSource() {
         Properties properties = new Properties();
@@ -33,6 +33,10 @@ public class DataSource {
             url = properties.getProperty("DataSource.url");
             user = properties.getProperty("DataSource.user");
             pass = properties.getProperty("DataSource.pass");
+
+            if (url == null || user == null || pass == null) {
+                throw new IllegalStateException("Configuration MySQL incomplete");
+            }
 
         } catch (IOException e) {
             throw new RuntimeException(

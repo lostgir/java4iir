@@ -30,6 +30,10 @@ public class DashboardView extends JFrame {
     private final Color fond = new Color(242, 245, 249);
 
     public DashboardView(DashboardController controller) {
+        this(controller, null);
+    }
+
+    public DashboardView(DashboardController controller, java.util.function.Supplier<JPanel> creerFileAttente) {
         this.controller = controller;
 
         setTitle("DentalSoft - Tableau de bord d'activité");
@@ -39,6 +43,18 @@ public class DashboardView extends JFrame {
         setLocationRelativeTo(null);
 
         initialiserInterface();
+        if (creerFileAttente != null) {
+            JTabbedPane tabs = new JTabbedPane();
+            JPanel file = new JPanel(new BorderLayout());
+            tabs.addTab("Activité", getContentPane());
+            tabs.addTab("File d'attente du jour", file);
+            tabs.addChangeListener(e -> {
+                if (tabs.getSelectedComponent() == file && file.getComponentCount() == 0) {
+                    file.add(creerFileAttente.get(), BorderLayout.CENTER);
+                }
+            });
+            setContentPane(tabs);
+        }
         actualiserStatistiques();
     }
 

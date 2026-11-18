@@ -4,21 +4,18 @@ import ma.dental_ops.domain.DossierMedical;
 import ma.dental_ops.domain.Patient;
 import ma.dental_ops.dto.DossierMedecinDTO;
 import ma.dental_ops.dto.PatientSecretariatDTO;
+import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
 import ma.dental_ops.repository.api.PatientRepository;
 import ma.dental_ops.service.api.PatientService;
- HibaRki
 import ma.dental_ops.config.DataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
- main
-
 import java.util.List;
 
 public class PatientServiceImpl implements PatientService {
- HibaRki
 
     private final PatientRepository patientRepository;
     private final DossierMedicalRepository dossierRepository;
@@ -75,30 +72,6 @@ public class PatientServiceImpl implements PatientService {
                     "Erreur de connexion à la base de données", e
             );
         }
-
-
-    private final PatientRepository patientRepository;
-    private final DossierMedicalRepository dossierRepository;
-
-    public PatientServiceImpl(PatientRepository patientRepository, DossierMedicalRepository dossierRepository) {
-        this.patientRepository = patientRepository;
-        this.dossierRepository = dossierRepository;
-    }
-
-    @Override
-    public Patient creerPatientAvecDossier(Patient patient, Long medecinId) {
-        // T05 : Création du patient
-        Patient patientSauve = patientRepository.save(patient);
-
-        // T05 : Création du dossier médical (RG-01)
-        DossierMedical dossier = DossierMedical.builder()
-                .patientId(patientSauve.getId())
-                .medecinId(medecinId)
-                .build();
-        dossierRepository.save(dossier);
-
-        return patientSauve;
- main
     }
 
     @Override
@@ -164,5 +137,18 @@ public class PatientServiceImpl implements PatientService {
                 .email(p.getEmail())
                 .archive(p.isArchive())
                 .build()).toList();
+    }
+
+    @Override
+    public PageResult<PatientSecretariatDTO> rechercherPatients(String terme, int page, int pageSize) {
+        if (page < 0 || pageSize < 1 || pageSize > 500) {
+            throw new IllegalArgumentException("Page must be >= 0 and page size between 1 and 500");
+        }
+        PageResult<Patient> result = patientRepository.searchPage(terme, page, pageSize);
+        List<PatientSecretariatDTO> items = result.items().stream().map(p -> PatientSecretariatDTO.builder()
+                .id(p.getId()).nom(p.getNom()).prenom(p.getPrenom())
+                .dateNaissance(p.getDateNaissance()).telephone(p.getTelephone())
+                .email(p.getEmail()).archive(p.isArchive()).build()).toList();
+        return new PageResult<>(items, result.page(), result.pageSize(), result.totalItems());
     }
 }
