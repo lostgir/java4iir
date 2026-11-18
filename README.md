@@ -6,6 +6,15 @@ Application desktop (Swing) de gestion de cabinet dentaire, avec base de donnees
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installe et lance
 - Un **JRE/JDK 25** en local pour lancer l'application (l'UI Swing s'affiche en natif, pas dans un conteneur)
+- **Aucun MySQL local sur le port 3307** (MySQL installe sur Windows, XAMPP, WAMP, Laragon...) : il doit etre arrete, sinon Docker ne peut pas demarrer (voir Depannage)
+
+### Configurer IntelliJ (a faire une seule fois)
+
+Le projet est compile en Java 25 : IntelliJ doit utiliser un **JDK 25 ou plus recent**.
+
+1. `File > Project Structure > Project` : **SDK** = un JDK 25+ (sinon `Add SDK > Download JDK`, version 25, Eclipse Temurin), **Language level** = *SDK default*.
+2. `Modules > Dependencies` : **Module SDK** = *Project SDK*.
+3. `Apply > OK`, puis panneau **Maven > Reload**.
 
 ## 1. Demarrer la base de donnees
 
@@ -69,3 +78,14 @@ ou via votre IDE, en executant directement la classe `App`.
   (`docker compose ps`) et qu'aucun autre service n'occupe deja le port `3307`.
 - **Les comptes de test n'existent pas** : le volume MySQL existait deja avant l'ajout des scripts
   d'init. Faites `docker compose down -v` puis `docker compose up -d` pour repartir propre.
+- **`Cannot compile module ... JVM target 25` / `UnsupportedClassVersionError`** : IntelliJ utilise un JDK trop ancien (ex. 17). Voir *Configurer IntelliJ* ci-dessus.
+- **`ports are not available ... 3307` au `docker compose up -d`** : un autre MySQL occupe le port. Sous Windows (PowerShell administrateur) :
+  ```powershell
+  netstat -ano | findstr :3307          # derniere colonne = PID
+  tasklist /FI "PID eq <PID>"           # mysqld.exe ?
+  Get-Service *mysql*                   # nom du service, ex. MySQL80
+  Stop-Service MySQL80
+  Set-Service MySQL80 -StartupType Manual   # pour qu'il ne redemarre plus seul
+  ```
+  Puis relancer `docker compose up -d`.
+- **`Unknown column 'email'` ou table introuvable** : l'application parle a une ancienne base (souvent un MySQL local sur 3307, voir ci-dessus) ou a un ancien volume Docker : `docker compose down -v` puis `docker compose up -d`.
