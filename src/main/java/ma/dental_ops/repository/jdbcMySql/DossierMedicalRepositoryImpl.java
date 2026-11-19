@@ -1,6 +1,6 @@
 package ma.dental_ops.repository.jdbcMySql;
 
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.domain.DossierMedical;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
 
@@ -8,10 +8,20 @@ import java.sql.*;
 
 public class DossierMedicalRepositoryImpl implements DossierMedicalRepository {
 
+    private final JdbcConnectionFactory connectionFactory;
+
+    public DossierMedicalRepositoryImpl() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public DossierMedicalRepositoryImpl(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
+
     @Override
     public DossierMedical save(DossierMedical dossier) {
         try (Connection connection =
-                     DataSource.getInstance().getConnection()) {
+                     connectionFactory.createConnection()) {
 
             return save(dossier, connection);
 
@@ -64,7 +74,7 @@ public class DossierMedicalRepositoryImpl implements DossierMedicalRepository {
                 """;
 
         try (Connection connection =
-                     DataSource.getInstance().getConnection();
+                     connectionFactory.createConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setLong(1, patientId);

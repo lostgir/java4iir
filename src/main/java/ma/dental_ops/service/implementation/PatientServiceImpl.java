@@ -8,7 +8,7 @@ import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
 import ma.dental_ops.repository.api.PatientRepository;
 import ma.dental_ops.service.api.PatientService;
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -19,17 +19,22 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
     private final DossierMedicalRepository dossierRepository;
+    private final JdbcConnectionFactory connectionFactory;
 
-    public PatientServiceImpl(PatientRepository patientRepository, DossierMedicalRepository dossierRepository) {
-        this.patientRepository = patientRepository;
-        this.dossierRepository = dossierRepository;
+    public PatientServiceImpl(
+            PatientRepository patientRepository,
+            DossierMedicalRepository dossierRepository,
+            JdbcConnectionFactory connectionFactory) {
+        this.patientRepository = java.util.Objects.requireNonNull(patientRepository);
+        this.dossierRepository = java.util.Objects.requireNonNull(dossierRepository);
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
     }
 
     @Override
     public Patient creerPatientAvecDossier(Patient patient, Long medecinId) {
 
         try (Connection connection =
-                     DataSource.getInstance().getConnection()) {
+                     connectionFactory.createConnection()) {
 
             // Début de la transaction
             connection.setAutoCommit(false);

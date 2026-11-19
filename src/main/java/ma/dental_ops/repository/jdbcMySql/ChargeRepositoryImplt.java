@@ -1,6 +1,6 @@
 package ma.dental_ops.repository.jdbcMySql;
 
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.domain.Charge;
 import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.ChargeRepository;
@@ -13,6 +13,16 @@ import java.util.List;
 
 public class ChargeRepositoryImplt implements ChargeRepository {
 
+    private final JdbcConnectionFactory connectionFactory;
+
+    public ChargeRepositoryImplt() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public ChargeRepositoryImplt(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
+
     private static final String SELECT_COLUMNS =
             "id_charge, titre, montant, date_charge, description, auteur_id";
 
@@ -22,7 +32,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
 
         String sql = "SELECT " + SELECT_COLUMNS + " FROM charge";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -42,7 +52,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
         String sql = "SELECT " + SELECT_COLUMNS +
                 " FROM Charge WHERE id_charge = ?";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setLong(1, idCharge);
@@ -66,7 +76,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
                 "(titre, montant, date_charge, description, auteur_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(
                      sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -100,7 +110,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
         String sql = "SELECT " + SELECT_COLUMNS +
                 " FROM charge WHERE date_charge BETWEEN ? AND ?";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setDate(1, Date.valueOf(dateDebut));
@@ -128,7 +138,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
         String filter = " FROM charge WHERE date_charge BETWEEN ? AND ?";
         long total;
         List<Charge> charges = new ArrayList<>();
-        try (Connection connection = DataSource.getInstance().getConnection()) {
+        try (Connection connection = connectionFactory.createConnection()) {
             try (PreparedStatement count = connection.prepareStatement("SELECT COUNT(*)" + filter)) {
                 count.setDate(1, Date.valueOf(dateDebut));
                 count.setDate(2, Date.valueOf(dateFin));
@@ -161,7 +171,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
         String sql = "SELECT COALESCE(SUM(montant), 0) " +
                 "FROM charge WHERE date_charge BETWEEN ? AND ?";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setDate(1, Date.valueOf(dateDebut));
@@ -189,7 +199,7 @@ public class ChargeRepositoryImplt implements ChargeRepository {
                   - (SELECT COALESCE(SUM(montant), 0) FROM charge
                      WHERE date_charge BETWEEN ? AND ?) AS solde
                 """;
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setDate(1, Date.valueOf(debut));
             statement.setDate(2, Date.valueOf(fin));

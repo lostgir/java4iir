@@ -1,6 +1,6 @@
 package ma.dental_ops.repository.jdbcMySql;
 
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.domain.Patient;
 import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.PatientRepository;
@@ -11,10 +11,20 @@ import java.util.List;
 
 public class PatientRepositoryImpl implements PatientRepository {
 
+    private final JdbcConnectionFactory connectionFactory;
+
+    public PatientRepositoryImpl() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public PatientRepositoryImpl(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
+
     @Override
     public Patient save(Patient patient) {
         try (Connection connection =
-                     DataSource.getInstance().getConnection()) {
+                     connectionFactory.createConnection()) {
 
             return save(patient, connection);
 
@@ -60,7 +70,7 @@ public class PatientRepositoryImpl implements PatientRepository {
         String sql = "SELECT * FROM patient WHERE id_patient = ?";
 
         try (Connection connection =
-                     DataSource.getInstance().getConnection();
+                     connectionFactory.createConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setLong(1, id);
@@ -85,7 +95,7 @@ public class PatientRepositoryImpl implements PatientRepository {
         String sql = "SELECT * FROM patient";
 
         try (Connection connection =
-                     DataSource.getInstance().getConnection();
+                     connectionFactory.createConnection();
              PreparedStatement ps = connection.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
@@ -106,7 +116,7 @@ public class PatientRepositoryImpl implements PatientRepository {
         String sql = "UPDATE patient SET archive = ? WHERE id_patient = ?";
 
         try (Connection connection =
-                     DataSource.getInstance().getConnection();
+                     connectionFactory.createConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setBoolean(1, archive);
@@ -129,7 +139,7 @@ public class PatientRepositoryImpl implements PatientRepository {
         """;
 
         try (Connection connection =
-                     DataSource.getInstance().getConnection();
+                     connectionFactory.createConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
 
             String recherche = "%" + searchTerm + "%";
@@ -167,7 +177,7 @@ public class PatientRepositoryImpl implements PatientRepository {
                 + " ORDER BY nom, prenom, id_patient LIMIT ? OFFSET ?";
         long total;
         List<Patient> patients = new ArrayList<>();
-        try (Connection connection = DataSource.getInstance().getConnection()) {
+        try (Connection connection = connectionFactory.createConnection()) {
             try (PreparedStatement count = connection.prepareStatement(countSql)) {
                 bindFilter(count, term);
                 try (ResultSet rs = count.executeQuery()) {

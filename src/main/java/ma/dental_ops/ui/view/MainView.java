@@ -3,17 +3,15 @@ package ma.dental_ops.ui.view;
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.common.enums.Droit;
 import ma.dental_ops.common.security.Session;
-import ma.dental_ops.service.implementation.ChargeServiceImpl;
-import ma.dental_ops.service.implementation.DashboardServiceImpl;
-import ma.dental_ops.service.implementation.UtilisateurServiceImpl;
+import ma.dental_ops.config.ApplicationContext;
+import ma.dental_ops.service.api.ChargeService;
+import ma.dental_ops.service.api.DashboardService;
+import ma.dental_ops.service.api.FileAttenteService;
+import ma.dental_ops.service.api.PatientService;
+import ma.dental_ops.service.api.UtilisateurService;
 import ma.dental_ops.ui.controller.ChargeController;
 import ma.dental_ops.ui.controller.DashboardController;
 import ma.dental_ops.ui.controller.PatientController;
-import ma.dental_ops.repository.jdbcMySql.PatientRepositoryImpl;
-import ma.dental_ops.repository.jdbcMySql.DossierMedicalRepositoryImpl;
-import ma.dental_ops.repository.jdbcMySql.FileAttenteRepositoryImpl;
-import ma.dental_ops.service.implementation.PatientServiceImpl;
-import ma.dental_ops.service.implementation.FileAttenteServiceImpl;
 import ma.dental_ops.ui.controller.UtilisateurController;
 
 import javax.swing.*;
@@ -23,6 +21,7 @@ public class MainView extends JFrame {
 
     private Utilisateur utilisateurConnecte;
     private final Runnable onLogout;
+    private final ApplicationContext context;
 
     public MainView() {
         this(null, null);
@@ -35,6 +34,7 @@ public class MainView extends JFrame {
     public MainView(Utilisateur utilisateurConnecte, Runnable onLogout) {
         this.utilisateurConnecte = utilisateurConnecte;
         this.onLogout = onLogout;
+        this.context = ApplicationContext.getInstance();
         setTitle("DentalSoft - Menu principal");
         setSize(600, 400);
         setDefaultCloseOperation(onLogout != null ? JFrame.DISPOSE_ON_CLOSE : JFrame.EXIT_ON_CLOSE);
@@ -95,7 +95,7 @@ public class MainView extends JFrame {
             JButton btnPatients = new JButton("Rechercher des patients");
             styliserBouton(btnPatients);
             btnPatients.addActionListener(e -> new PatientListView(new PatientController(
-                    new PatientServiceImpl(new PatientRepositoryImpl(), new DossierMedicalRepositoryImpl())))
+                    context.getBean(PatientService.class)))
                     .setVisible(true));
             boutons.add(btnPatients);
         }
@@ -103,7 +103,7 @@ public class MainView extends JFrame {
             JButton btnProfil = new JButton("Mon profil");
             styliserBouton(btnProfil);
             btnProfil.addActionListener(e -> new MonProfilView(this, this.utilisateurConnecte,
-                    new UtilisateurController(new UtilisateurServiceImpl()), p -> this.utilisateurConnecte = p).setVisible(true));
+                    new UtilisateurController(context.getBean(UtilisateurService.class)), p -> this.utilisateurConnecte = p).setVisible(true));
             boutons.add(btnProfil);
         }
         if (onLogout != null) {
@@ -139,17 +139,17 @@ public class MainView extends JFrame {
     }
 
     private FileAttenteView creerFileAttente() {
-        return new FileAttenteView(new FileAttenteServiceImpl(new FileAttenteRepositoryImpl()));
+        return new FileAttenteView(context.getBean(FileAttenteService.class));
     }
 
     private void ouvrirDashboard() {
-        DashboardController controller = new DashboardController(new DashboardServiceImpl());
+        DashboardController controller = new DashboardController(context.getBean(DashboardService.class));
         DashboardView view = new DashboardView(controller, this::creerFileAttente);
         view.setVisible(true);
     }
 
     private void ouvrirCharges() {
-        ChargeController controller = new ChargeController(new ChargeServiceImpl(), utilisateurConnecte);
+        ChargeController controller = new ChargeController(context.getBean(ChargeService.class), utilisateurConnecte);
         ChargeView view = new ChargeView(controller);
         view.setVisible(true);
     }

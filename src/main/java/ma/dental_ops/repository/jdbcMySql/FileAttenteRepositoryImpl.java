@@ -1,6 +1,6 @@
 package ma.dental_ops.repository.jdbcMySql;
 
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.dto.PatientEnAttente;
 import ma.dental_ops.dto.RendezVousDuJour;
 import ma.dental_ops.repository.api.FileAttenteRepository;
@@ -12,6 +12,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileAttenteRepositoryImpl implements FileAttenteRepository {
+
+    private final JdbcConnectionFactory connectionFactory;
+
+    public FileAttenteRepositoryImpl() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public FileAttenteRepositoryImpl(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
     @Override
     public void enregistrerArrivee(long rendezVousId, LocalDate jour) {
         String sql = "UPDATE rendez_vous SET statut = 'ARRIVE', heure_arrivee = CURRENT_TIMESTAMP "
@@ -34,7 +44,7 @@ public class FileAttenteRepositoryImpl implements FileAttenteRepository {
     }
 
     private void updateStatus(String sql, long rendezVousId, LocalDate jour, String invalidMessage) {
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setLong(1, rendezVousId);
             ps.setDate(2, Date.valueOf(jour));
@@ -51,7 +61,7 @@ public class FileAttenteRepositoryImpl implements FileAttenteRepository {
                 + "WHERE r.date_rendez_vous = ? AND r.statut = 'ARRIVE' "
                 + "ORDER BY r.heure_arrivee, r.id_rendez_vous";
         List<PatientEnAttente> result = new ArrayList<>();
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(jour));
             try (ResultSet rs = ps.executeQuery()) {
@@ -75,7 +85,7 @@ public class FileAttenteRepositoryImpl implements FileAttenteRepository {
                 + "WHERE r.date_rendez_vous = ? AND r.statut IN ('PLANIFIE','CONFIRME') "
                 + "ORDER BY r.heure_rendez_vous, r.id_rendez_vous";
         List<RendezVousDuJour> result = new ArrayList<>();
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(jour));
             try (ResultSet rs = ps.executeQuery()) {
