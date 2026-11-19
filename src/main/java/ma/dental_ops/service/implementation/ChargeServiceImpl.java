@@ -5,7 +5,6 @@ import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.common.enums.StatutUtilisateur;
 import ma.dental_ops.dto.PageResult;
 import ma.dental_ops.repository.api.ChargeRepository;
-import ma.dental_ops.repository.jdbcMySql.ChargeRepositoryImplt;
 import ma.dental_ops.service.api.ChargeService;
 
 import java.math.BigDecimal;
@@ -15,10 +14,6 @@ import java.util.List;
 public class ChargeServiceImpl implements ChargeService {
 
     private final ChargeRepository chargeRepository;
-
-    public ChargeServiceImpl() {
-        this(new ChargeRepositoryImplt());
-    }
 
     public ChargeServiceImpl(ChargeRepository chargeRepository) {
         this.chargeRepository = java.util.Objects.requireNonNull(chargeRepository);

@@ -5,9 +5,8 @@ import ma.dental_ops.domain.Patient;
 import ma.dental_ops.domain.DossierMedical;
 import ma.dental_ops.repository.api.PatientRepository;
 import ma.dental_ops.repository.api.DossierMedicalRepository;
-import ma.dental_ops.repository.jdbcMySql.PatientRepositoryImpl;
-import ma.dental_ops.repository.jdbcMySql.DossierMedicalRepositoryImpl;
-import ma.dental_ops.service.implementation.PatientServiceImpl;
+import ma.dental_ops.config.ApplicationContext;
+import ma.dental_ops.service.api.PatientService;
 import ma.dental_ops.dto.PatientSecretariatDTO;
 
 import java.time.LocalDate;
@@ -18,11 +17,10 @@ public class TestPatientService {
 
         System.out.println("--- Début des tests ---");
 
-        PatientRepository patientRepo = new PatientRepositoryImpl();
-        DossierMedicalRepository dossierRepo = new DossierMedicalRepositoryImpl();
-
-        PatientServiceImpl service =
-                new PatientServiceImpl(patientRepo, dossierRepo);
+        ApplicationContext context = ApplicationContext.getInstance();
+        PatientRepository patientRepo = context.getBean(PatientRepository.class);
+        DossierMedicalRepository dossierRepo = context.getBean(DossierMedicalRepository.class);
+        PatientService service = context.getBean(PatientService.class);
 
         // TEST 1 : US-02 - Création du patient
 

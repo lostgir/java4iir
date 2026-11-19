@@ -1,6 +1,6 @@
 package ma.dental_ops.repository.jdbcMySql;
 
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.repository.api.RendezVousRepository;
 
 import java.sql.Connection;
@@ -10,6 +10,16 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class RendezVousRepositoryImpl implements RendezVousRepository {
+
+    private final JdbcConnectionFactory connectionFactory;
+
+    public RendezVousRepositoryImpl() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public RendezVousRepositoryImpl(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
 
     @Override
     public long compterRendezVous(LocalDate dateDebut, LocalDate dateFin) {
@@ -21,7 +31,7 @@ public class RendezVousRepositoryImpl implements RendezVousRepository {
                 AND statut <> 'ANNULE'
                 """;
 
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setDate(1, java.sql.Date.valueOf(dateDebut));
@@ -51,7 +61,7 @@ public class RendezVousRepositoryImpl implements RendezVousRepository {
                 AND statut = 'TERMINE'
                 """;
 
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setDate(1, java.sql.Date.valueOf(dateDebut));
@@ -80,7 +90,7 @@ public class RendezVousRepositoryImpl implements RendezVousRepository {
             AND statut <> 'ANNULE'
             """;
 
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setDate(1, java.sql.Date.valueOf(date));

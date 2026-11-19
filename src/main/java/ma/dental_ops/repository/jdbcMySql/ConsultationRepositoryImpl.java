@@ -1,6 +1,6 @@
 package ma.dental_ops.repository.jdbcMySql;
 
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.repository.api.ConsultationRepository;
 
 import java.sql.Connection;
@@ -11,6 +11,16 @@ import java.time.LocalDate;
 
 public class ConsultationRepositoryImpl implements ConsultationRepository {
 
+    private final JdbcConnectionFactory connectionFactory;
+
+    public ConsultationRepositoryImpl() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public ConsultationRepositoryImpl(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
+
     @Override
     public long compterConsultations(LocalDate dateDebut, LocalDate dateFin) {
 
@@ -20,7 +30,7 @@ public class ConsultationRepositoryImpl implements ConsultationRepository {
                 WHERE date_consultation BETWEEN ? AND ?
                 """;
 
-        try (Connection cn = DataSource.getInstance().getConnection();
+        try (Connection cn = connectionFactory.createConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setDate(1, java.sql.Date.valueOf(dateDebut));

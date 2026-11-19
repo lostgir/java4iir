@@ -1,7 +1,7 @@
 package ma.dental_ops.repository.jdbcMySql;
 
 import ma.dental_ops.common.enums.StatutUtilisateur;
-import ma.dental_ops.config.DataSource;
+import ma.dental_ops.config.JdbcConnectionFactory;
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.repository.api.UtilisateurRepository;
 
@@ -10,6 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UtilisateurRepositoryImplt implements UtilisateurRepository {
+
+    private final JdbcConnectionFactory connectionFactory;
+
+    public UtilisateurRepositoryImplt() {
+        this(JdbcConnectionFactory.getInstance());
+    }
+
+    public UtilisateurRepositoryImplt(JdbcConnectionFactory connectionFactory) {
+        this.connectionFactory = java.util.Objects.requireNonNull(connectionFactory);
+    }
 
     private static final String SELECT_COLUMNS =
             "id_utilisateur, nom_utilisateur, prenom_utilisateur, " +
@@ -20,7 +30,7 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
         String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur";
         List<Utilisateur> utilisateurs = new ArrayList<>();
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -72,7 +82,7 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
     }
 
     private Utilisateur rechercher(String sql, Object valeur) {
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setObject(1, valeur);
@@ -95,7 +105,7 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                         "telephone, mot_de_passe, statut_utilisateur, actif) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(
                      sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -135,7 +145,7 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                         "SET nom_utilisateur = ?, prenom_utilisateur = ?, telephone = ? " +
                         "WHERE id_utilisateur = ?";
 
-        try (Connection connection = DataSource.getInstance().getConnection();
+        try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, nom);

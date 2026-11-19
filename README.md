@@ -14,7 +14,7 @@ Le projet est développé en Java avec une interface graphique Swing, une connex
 
 | Technologie | Version |
 |---|---|
-| Java JDK | 17 |
+| Java JDK | 25 |
 | Maven | 3.x (intégré à IntelliJ IDEA) |
 | MySQL Server | 8.0 |
 | MySQL Connector/J | 8.4.0 |
@@ -27,7 +27,7 @@ Le projet est développé en Java avec une interface graphique Swing, une connex
 
 Avant de commencer, installer :
 
-- JDK 17.
+- JDK 25.
 - MySQL Server 8.0.
 - IntelliJ IDEA.
 - Une connexion Internet pour télécharger les dépendances Maven.
@@ -119,14 +119,21 @@ Ce script contient des données fictives destinées aux tests et à la démonstr
 
 ## 6. Configuration de l'application
 
-Ouvrir :
+Copier d'abord le fichier d'exemple (PowerShell) :
+
+```powershell
+Copy-Item src/main/resources/application.properties.example src/main/resources/application.properties
+```
+
+Ouvrir ensuite :
 
 `src/main/resources/application.properties`
 
 Configurer la connexion à MySQL :
 
 ```properties
-DataSource.url=jdbc:mysql://127.0.0.1:3306/dental_ops_test
+DataSource.driver=com.mysql.cj.jdbc.Driver
+DataSource.url=jdbc:mysql://127.0.0.1:3307/dental_ops_db
 DataSource.user=root
 DataSource.pass=VOTRE_MOT_DE_PASSE
 ```
@@ -134,6 +141,8 @@ DataSource.pass=VOTRE_MOT_DE_PASSE
 Remplacer `VOTRE_MOT_DE_PASSE` par le mot de passe MySQL configuré sur votre machine.
 
 Ne jamais publier un vrai mot de passe dans GitHub.
+Le fichier `application.properties` est ignore par Git ; seul
+`application.properties.example`, sans secret reel, est versionne.
 
 La base configurée dans cette URL doit correspondre à celle qui contient les tables créées par `schema.sql`.
 

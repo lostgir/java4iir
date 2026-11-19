@@ -2,17 +2,15 @@ package ma.dental_ops.ui.view;
 
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.common.enums.StatutUtilisateur;
-import ma.dental_ops.service.implementation.ChargeServiceImpl;
-import ma.dental_ops.service.implementation.DashboardServiceImpl;
-import ma.dental_ops.service.implementation.UtilisateurServiceImpl;
+import ma.dental_ops.config.ApplicationContext;
+import ma.dental_ops.service.api.ChargeService;
+import ma.dental_ops.service.api.DashboardService;
+import ma.dental_ops.service.api.FileAttenteService;
+import ma.dental_ops.service.api.PatientService;
+import ma.dental_ops.service.api.UtilisateurService;
 import ma.dental_ops.ui.controller.ChargeController;
 import ma.dental_ops.ui.controller.DashboardController;
 import ma.dental_ops.ui.controller.PatientController;
-import ma.dental_ops.repository.jdbcMySql.PatientRepositoryImpl;
-import ma.dental_ops.repository.jdbcMySql.DossierMedicalRepositoryImpl;
-import ma.dental_ops.repository.jdbcMySql.FileAttenteRepositoryImpl;
-import ma.dental_ops.service.implementation.PatientServiceImpl;
-import ma.dental_ops.service.implementation.FileAttenteServiceImpl;
 import ma.dental_ops.ui.controller.UtilisateurController;
 
 import javax.swing.*;
@@ -21,13 +19,19 @@ import java.awt.*;
 public class MainView extends JFrame {
 
     private Utilisateur utilisateurConnecte;
+    private final ApplicationContext context;
 
     public MainView() {
         this(null);
     }
 
     public MainView(Utilisateur utilisateurConnecte) {
+        this(utilisateurConnecte, ApplicationContext.getInstance());
+    }
+
+    MainView(Utilisateur utilisateurConnecte, ApplicationContext context) {
         this.utilisateurConnecte = utilisateurConnecte;
+        this.context = context;
         setTitle("DentalSoft - Menu principal");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -75,11 +79,12 @@ public class MainView extends JFrame {
         if (medecin) btnCharges.addActionListener(e -> ouvrirCharges());
         btnFileAttente.addActionListener(e -> ouvrirFileAttente());
         btnPatients.addActionListener(e -> new PatientListView(new PatientController(
-                new PatientServiceImpl(new PatientRepositoryImpl(), new DossierMedicalRepositoryImpl())))
+                context.getBean(PatientService.class)))
                 .setVisible(true));
         if (utilisateurConnecte != null) {
             btnProfil.addActionListener(e -> new MonProfilView(this, this.utilisateurConnecte,
-                    new UtilisateurController(new UtilisateurServiceImpl()), profil -> this.utilisateurConnecte = profil).setVisible(true));
+                    new UtilisateurController(context.getBean(UtilisateurService.class)),
+                    profil -> this.utilisateurConnecte = profil).setVisible(true));
         }
 
         boutons.add(btnDashboard);
@@ -111,17 +116,17 @@ public class MainView extends JFrame {
     }
 
     private FileAttenteView creerFileAttente() {
-        return new FileAttenteView(new FileAttenteServiceImpl(new FileAttenteRepositoryImpl()));
+        return new FileAttenteView(context.getBean(FileAttenteService.class));
     }
 
     private void ouvrirDashboard() {
-        DashboardController controller = new DashboardController(new DashboardServiceImpl());
+        DashboardController controller = new DashboardController(context.getBean(DashboardService.class));
         DashboardView view = new DashboardView(controller, this::creerFileAttente);
         view.setVisible(true);
     }
 
     private void ouvrirCharges() {
-        ChargeController controller = new ChargeController(new ChargeServiceImpl(), utilisateurConnecte);
+        ChargeController controller = new ChargeController(context.getBean(ChargeService.class), utilisateurConnecte);
         ChargeView view = new ChargeView(controller);
         view.setVisible(true);
     }
