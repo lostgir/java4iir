@@ -47,7 +47,7 @@ public final class JdbcConnectionFactory {
         return DriverManager.getConnection(url, user, password);
     }
 
-    impl de la methode load property
+    // Charge les propriétés JDBC depuis le classpath.
     private static Properties loadProperties() {
         Properties properties = new Properties();
         try (InputStream input = JdbcConnectionFactory.class.getClassLoader()

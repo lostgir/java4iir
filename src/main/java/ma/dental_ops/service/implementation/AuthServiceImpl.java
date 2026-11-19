@@ -1,42 +1,41 @@
 package ma.dental_ops.service.implementation;
 
+import ma.dental_ops.common.security.AuthenticationException;
+import ma.dental_ops.common.security.Session;
 import ma.dental_ops.domain.Utilisateur;
 import ma.dental_ops.repository.api.UtilisateurRepository;
 import ma.dental_ops.service.api.AuthService;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.Objects;
-
 public class AuthServiceImpl implements AuthService {
-    private final UtilisateurRepository repository;
 
-    public AuthServiceImpl(UtilisateurRepository repository) {
-        this.repository = Objects.requireNonNull(repository);
+    private static final String ERREUR_IDENTIFIANTS = "Adresse e-mail ou mot de passe incorrect.";
+
+    private final UtilisateurRepository utilisateurRepository;
+
+    public AuthServiceImpl(UtilisateurRepository utilisateurRepository) {
+        this.utilisateurRepository = utilisateurRepository;
     }
 
     @Override
-    public Utilisateur authentifier(String login, char[] motDePasse) {
-        if (login == null || login.isBlank()
-                || motDePasse == null || motDePasse.length == 0) {
-            return null;
-        }
+    public Utilisateur login(String login, String motDePasse) {
+        Utilisateur utilisateur = utilisateurRepository.findByLogin(login);
 
-        Utilisateur utilisateur = repository.findByLogin(login.trim());
-
+        // Message generique dans tous les cas (identifiant inconnu, mot de
+        // passe errone ou compte inactif) pour ne jamais reveler quel champ
+        // pose probleme, ni si le compte existe (CA-01).
         if (utilisateur == null
                 || !utilisateur.isActif()
-                || utilisateur.getMotDePasse() == null) {
-            return null;
+                || !BCrypt.checkpw(motDePasse, utilisateur.getMotDePasse())) {
+            throw new AuthenticationException(ERREUR_IDENTIFIANTS);
         }
 
-        try {
-            boolean correct = BCrypt.checkpw(
-                    new String(motDePasse),
-                    utilisateur.getMotDePasse()
-            );
-            return correct ? utilisateur : null;
-        } catch (IllegalArgumentException invalidHash) {
-            return null;
-        }
+        Session.getInstance().connecter(utilisateur);
+        return utilisateur;
+    }
+
+    @Override
+    public void logout() {
+        Session.getInstance().deconnecter();
     }
 }
