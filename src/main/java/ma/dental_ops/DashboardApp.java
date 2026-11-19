@@ -2,7 +2,7 @@ package ma.dental_ops;
 
 import ma.dental_ops.service.implementation.DashboardServiceImpl;
 import ma.dental_ops.ui.controller.DashboardController;
-import ma.dental_ops.ui.view.DashboardView;
+import ma.dental_ops.ui.view.DashboardPanel;
 
 import javax.swing.SwingUtilities;
 
@@ -13,7 +13,7 @@ public class DashboardApp {
             DashboardController controller =
                     new DashboardController(new DashboardServiceImpl());
 
-            DashboardView view = new DashboardView(controller);
+            DashboardPanel view = new DashboardPanel(controller);
             view.setVisible(true);
         });
     }

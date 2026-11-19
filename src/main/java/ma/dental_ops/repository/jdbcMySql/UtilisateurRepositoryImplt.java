@@ -1,3 +1,4 @@
+
 package ma.dental_ops.repository.jdbcMySql;
 
 import ma.dental_ops.common.enums.StatutUtilisateur;
@@ -12,12 +13,8 @@ import java.util.List;
 public class UtilisateurRepositoryImplt implements UtilisateurRepository {
 
     private static final String SELECT_COLUMNS =
- HibaRki
             "id_utilisateur, nom_utilisateur, prenom_utilisateur, " +
                     "email, mot_de_passe, statut_utilisateur";
-
-            "id_utilisateur, nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif";
-     main
 
     @Override
     public List<Utilisateur> findAllUtilisateurs() {
@@ -25,62 +22,49 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
         List<Utilisateur> utilisateurs = new ArrayList<>();
 
         try (Connection connection = DataSource.getInstance().getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 utilisateurs.add(mapRow(resultSet));
             }
+
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la recuperation des utilisateurs", e);
+            throw new RuntimeException(
+                    "Erreur lors de la récupération des utilisateurs", e);
         }
+
         return utilisateurs;
     }
 
     @Override
     public Utilisateur findUtilisateurById(Long idUtilisateur) {
- HibaRki
-
         String sql = "SELECT " + SELECT_COLUMNS +
                 " FROM utilisateur WHERE id_utilisateur = ?";
 
-        String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE id_utilisateur = ?";
- main
-
         try (Connection connection = DataSource.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
+
             statement.setLong(1, idUtilisateur);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? mapRow(resultSet) : null;
             }
+
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la recuperation de l'utilisateur " + idUtilisateur, e);
+            throw new RuntimeException(
+                    "Erreur lors de la récupération de l'utilisateur " + idUtilisateur, e);
         }
     }
 
     @Override
     public Utilisateur findByLogin(String login) {
-        String sql = "SELECT " + SELECT_COLUMNS + " FROM utilisateur WHERE login = ?";
-
-        try (Connection connection = DataSource.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, login);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? mapRow(resultSet) : null;
-            }
-        } catch (SQLException e) {
- HibaRki
-            throw new RuntimeException(
-                    "Erreur lors de la récupération de l'utilisateur", e);
-        }
+        // L'email sert d'identifiant de connexion dans la base.
+        return findByEmail(login);
     }
 
-    // Récupérer un utilisateur par son email
     @Override
     public Utilisateur findByEmail(String email) {
-
         String sql = "SELECT " + SELECT_COLUMNS +
                 " FROM utilisateur WHERE email = ?";
 
@@ -96,40 +80,26 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Erreur lors de la recherche par email", e);
-
-            throw new RuntimeException("Erreur lors de la recuperation de l'utilisateur par login", e);
- main
         }
     }
 
     @Override
     public Utilisateur save(Utilisateur utilisateur) {
- HibaRki
-
         String sql = "INSERT INTO utilisateur " +
                 "(nom_utilisateur, prenom_utilisateur, email, " +
                 "mot_de_passe, statut_utilisateur) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        String sql = "INSERT INTO utilisateur (nom_utilisateur, prenom_utilisateur, login, mot_de_passe, statut_utilisateur, actif) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
- main
-
         try (Connection connection = DataSource.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = connection.prepareStatement(
+                     sql, Statement.RETURN_GENERATED_KEYS)) {
+
             statement.setString(1, utilisateur.getNomUtilisateur());
             statement.setString(2, utilisateur.getPrenomUtilisateur());
- HibaRki
             statement.setString(3, utilisateur.getEmail());
             statement.setString(4, utilisateur.getMotDePasse());
             statement.setString(5, utilisateur.getStatutUtilisateur().name());
 
-
-            statement.setString(3, utilisateur.getLogin());
-            statement.setString(4, utilisateur.getMotDePasse());
-            statement.setString(5, utilisateur.getStatutUtilisateur().name());
-            statement.setBoolean(6, utilisateur.isActif());
- main
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -137,29 +107,28 @@ public class UtilisateurRepositoryImplt implements UtilisateurRepository {
                     utilisateur.setIdUtilisateur(generatedKeys.getLong(1));
                 }
             }
+
             return utilisateur;
+
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de l'enregistrement de l'utilisateur", e);
+            throw new RuntimeException(
+                    "Erreur lors de l'enregistrement de l'utilisateur", e);
         }
     }
 
     private Utilisateur mapRow(ResultSet resultSet) throws SQLException {
+        String email = resultSet.getString("email");
+
         return Utilisateur.builder()
                 .idUtilisateur(resultSet.getLong("id_utilisateur"))
                 .nomUtilisateur(resultSet.getString("nom_utilisateur"))
                 .prenomUtilisateur(resultSet.getString("prenom_utilisateur"))
- HibaRki
-                .email(resultSet.getString("email"))
+                .email(email)
+                .login(email)
                 .motDePasse(resultSet.getString("mot_de_passe"))
                 .statutUtilisateur(
                         StatutUtilisateur.valueOf(
                                 resultSet.getString("statut_utilisateur")))
-
-                .login(resultSet.getString("login"))
-                .motDePasse(resultSet.getString("mot_de_passe"))
-                .statutUtilisateur(StatutUtilisateur.valueOf(resultSet.getString("statut_utilisateur")))
-                .actif(resultSet.getBoolean("actif"))
- main
                 .build();
     }
 }

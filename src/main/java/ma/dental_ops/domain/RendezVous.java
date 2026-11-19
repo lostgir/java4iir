@@ -1,6 +1,4 @@
- houda
 
- main
 package ma.dental_ops.domain;
 
 import lombok.AllArgsConstructor;
@@ -18,17 +16,9 @@ import java.time.LocalTime;
 public class RendezVous {
 
     private Long idRendezVous;
- houda
     private String nomPatient;
     private LocalDate dateRendezVous;
     private LocalTime heureRendezVous;
     private String motif;
     private String statut;
 }
-
-    private Long patientId;
-    private LocalDate dateRendezVous;
-    private LocalTime heureRendezVous;
-    private String statut;
-}
- main

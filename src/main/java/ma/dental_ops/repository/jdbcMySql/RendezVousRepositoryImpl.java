@@ -34,8 +34,11 @@ public class RendezVousRepositoryImpl implements RendezVousRepository {
             }
 
         } catch (SQLException e) {
+            e.printStackTrace();
+
             throw new RuntimeException(
-                    "Erreur lors du comptage des rendez-vous", e);
+                    "Erreur lors du comptage des rendez-vous du jour", e
+            );
         }
 
         return 0;

@@ -15,11 +15,10 @@ public class Utilisateur {
     private Long idUtilisateur;
     private String nomUtilisateur;
     private String prenomUtilisateur;
- HibaRki
+
     private String email;
 
     private String login;
- main
     private String motDePasse;
     private StatutUtilisateur statutUtilisateur;
     private boolean actif;

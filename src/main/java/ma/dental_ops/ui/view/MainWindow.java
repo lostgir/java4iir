@@ -30,6 +30,7 @@ public class MainWindow extends JFrame {
 
         // Configuration de la fenêtre
         setTitle("DentalSoft");
+
         ImageIcon logoIcon = new ImageIcon(
                 getClass().getResource("/images/logo-dentalsoft.png")
         );
@@ -59,22 +60,33 @@ public class MainWindow extends JFrame {
         contentPanel = new JPanel(cardLayout);
         contentPanel.setBackground(background);
 
-        // Pages principales
-        addPage("Tableau de bord",
+        // Page Tableau de bord
+        addPage(
+                "Tableau de bord",
                 "Bienvenue sur DentalSoft",
-                new JPanel());
+                new DashboardPanel()
+        );
 
-        addPage("Patients",
+        // Page Patients
+        addPage(
+                "Patients",
                 "Gestion des patients",
-                new PatientPanel());
+                new PatientPanel()
+        );
 
-        addPage("Rendez-vous",
+        // Page Rendez-vous
+        addPage(
+                "Rendez-vous",
                 "Gestion des rendez-vous",
-                new RendezVousPanel());
+                new RendezVousPanel()
+        );
 
-        addPage("Dossiers médicaux",
+        // Page Dossiers médicaux
+        addPage(
+                "Dossiers médicaux",
                 "Gestion des dossiers médicaux",
-                new DossierMedicalPanel());
+                new DossierMedicalPanel()
+        );
 
         // Page Utilisateurs réservée à l'administrateur
         if (utilisateur.getStatutUtilisateur()
@@ -96,7 +108,7 @@ public class MainWindow extends JFrame {
 
         setContentPane(mainPanel);
 
-        // Page affichée au démarrage
+        // Afficher le tableau de bord au démarrage
         cardLayout.show(contentPanel, "Tableau de bord");
     }
 
@@ -115,6 +127,7 @@ public class MainWindow extends JFrame {
         sidebar.setBorder(
                 BorderFactory.createEmptyBorder(25, 15, 20, 15)
         );
+
         ImageIcon logoIcon = new ImageIcon(
                 getClass().getResource("/images/logo-dentalsoft.png")
         );
@@ -169,6 +182,7 @@ public class MainWindow extends JFrame {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         button.addActionListener(e ->
                 cardLayout.show(contentPanel, pageName)
@@ -287,16 +301,22 @@ public class MainWindow extends JFrame {
     }
 
     // Ajouter une page
-    private void addPage(String pageName, String message, JPanel panel) {
+    private void addPage(
+            String pageName,
+            String message,
+            JPanel panel) {
 
-        if (panel instanceof PatientPanel ||
-                panel instanceof RendezVousPanel ||
-                panel instanceof DossierMedicalPanel) {
+        // Ajouter directement les panneaux fonctionnels
+        if (panel instanceof DashboardPanel
+                || panel instanceof PatientPanel
+                || panel instanceof RendezVousPanel
+                || panel instanceof DossierMedicalPanel) {
 
             contentPanel.add(panel, pageName);
             return;
         }
 
+        // Conteneur pour les autres pages
         JPanel page = new JPanel(new BorderLayout());
         page.setBackground(background);
 
